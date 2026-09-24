@@ -1,391 +1,982 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Westside Metros FC Game Model Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Model Workbook | Westside Metros FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#102a43;--navy2:#183b61;--red:#c6283b;--line:#d8dee6;--muted:#66717f;--bg:#eef2f5;--white:#fff;--soft:#f7f9fb;--green:#17623f}
+:root{
+  --ui:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --read:'Literata',Georgia,'Times New Roman',serif;
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#EBEFEA; --ink:#13272E; --muted:#526369; --line:#D3DAD5;
+  --brand:#163A45; --brand-ink:#FFFFFF; --focus:#1D5FA8;
+  --att:#1D5FA8; --a2d:#B8460F; --def:#8A3358; --d2a:#23795C;
+  --r0:#6F7F85; --r1:#9A6A00; --r2:#23795C;
+  --ok:#23795C; --warn:#9A5B00; --bad:#A63A3A;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A1F; --surface:#15252C; --sunk:#1B2E36; --ink:#E6EEEB; --muted:#9AAFB5; --line:#2B3F47;
+    --brand:#9CD0DE; --brand-ink:#0E1A1F; --focus:#7DB4F0;
+    --att:#78AEEA; --a2d:#F0946A; --def:#DE8DAC; --d2a:#6FCBA5;
+    --r0:#9AAFB5; --r1:#E2B24A; --r2:#6FCBA5;
+    --ok:#6FCBA5; --warn:#E2B24A; --bad:#EE8B8B;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A1F; --surface:#15252C; --sunk:#1B2E36; --ink:#E6EEEB; --muted:#9AAFB5; --line:#2B3F47;
+  --brand:#9CD0DE; --brand-ink:#0E1A1F; --focus:#7DB4F0;
+  --att:#78AEEA; --a2d:#F0946A; --def:#DE8DAC; --d2a:#6FCBA5;
+  --r0:#9AAFB5; --r1:#E2B24A; --r2:#6FCBA5;
+  --ok:#6FCBA5; --warn:#E2B24A; --bad:#EE8B8B;
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#17212b}
-.app{max-width:1160px;margin:auto;background:#fff;min-height:100vh;box-shadow:0 0 28px rgba(0,0,0,.08)}
-header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:26px}
-header h1{margin:0;font-size:clamp(1.6rem,4vw,2.5rem);line-height:1.08}
-header p{margin:7px 0 0;color:#dbe5ef}
-main{padding:22px}
-.top,.nav,.head,.custom-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
-.top{justify-content:space-between}
-button,.upload{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}
-button.primary{background:var(--red);color:#fff;border-color:var(--red)}
-button.navy{background:var(--navy);color:#fff;border-color:var(--navy)}
-button.smallbtn{padding:7px 10px;font-size:.82rem;min-height:36px}
-button.danger{color:#8e2330;border-color:#e3b8bd;background:#fff7f8}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
-.steps button.active{background:var(--navy);color:#fff}
-.panel{display:none}.panel.active{display:block}
-.card{border:1px solid var(--line);border-radius:12px;padding:17px;margin-bottom:15px}
-.soft{background:var(--soft)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-label{font-weight:700;font-size:.92rem}
-input[type=text],select,textarea{width:100%;margin-top:6px;border:1px solid #bcc6d1;border-radius:8px;padding:10px 11px;font:inherit;background:#fff}
-textarea{min-height:95px;resize:vertical}
-.small{font-size:.85rem;color:var(--muted);line-height:1.45}
-.tiny{font-size:.76rem;color:var(--muted);line-height:1.4}
-.guide{background:var(--navy);color:#fff;border-radius:12px;padding:17px}
-.guide .small,.guide .tiny{color:#e5edf5}
-.nav{justify-content:space-between;margin-top:15px}
-.moment{border-top:6px solid var(--navy)}
-.moment.loss{border-top-color:#b24a56}.moment.defending{border-top-color:var(--red)}.moment.win{border-top-color:#57799a}
-.head{justify-content:space-between;align-items:flex-start}
-.head h3{margin:0;color:var(--navy)}
-.source-box{margin-top:15px;border:1px solid var(--line);border-radius:10px;background:#fbfcfd;padding:13px}
-.source-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-.principle-group{border:1px solid var(--line);border-radius:9px;background:#fff;margin:9px 0;overflow:hidden}
-.main-principle{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;font-weight:800;color:var(--navy);cursor:pointer}
-.main-principle input,.sub-option input,.check input{width:auto;margin:2px 0 0;flex:0 0 auto}
-.sub-list{padding:0 11px 10px 31px;display:grid;gap:6px}
-.sub-option{display:flex;align-items:flex-start;gap:8px;font-size:.87rem;line-height:1.35;cursor:pointer}
-.custom-builder{border-top:1px dashed var(--line);margin-top:13px;padding-top:13px}
-.custom-row{align-items:flex-end}
-.custom-row label{flex:1 1 250px}
-.custom-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-.tag{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 9px;font-size:.8rem}
-.tag button{padding:0;border:none;background:transparent;color:#8e2330;font-size:1rem;line-height:1}
-.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.check{border:1px solid var(--line);border-radius:8px;padding:9px;font-weight:600;font-size:.88rem;display:flex;gap:7px;align-items:flex-start}
-.onepage{border:2px solid var(--navy);border-radius:13px;padding:18px}
-.onehead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--navy);padding-bottom:11px;margin-bottom:12px}
-.pills{display:flex;gap:6px;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:.74rem;font-weight:700}
-.modelgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.block{border:1px solid var(--line);border-radius:9px;padding:11px;break-inside:avoid}
-.block h4{margin:0 0 6px;color:var(--navy)}
-.block ul{margin:5px 0 0 18px;padding:0}.block li{margin:2px 0}
-.status{display:none;background:#edf8f1;color:var(--green);border:1px solid #cce7d7;border-radius:8px;padding:9px 11px;margin:12px 0}.status.show{display:block}
-.note{border-left:4px solid var(--red);background:#fff6f7;padding:10px 12px;border-radius:7px;margin-top:10px}
-.source-badge{display:inline-block;border-radius:999px;padding:4px 8px;background:#e8eff6;color:var(--navy);font-size:.72rem;font-weight:800}
-footer{padding:18px 22px 28px;color:var(--muted);font-size:.76rem}
-@media(max-width:780px){.grid2,.grid3,.modelgrid{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}main{padding:15px}header{padding:20px}}
-@media(max-width:450px){.actions{grid-template-columns:1fr}}
-@media print{header,.top,.steps,.panel:not(#p5),#p5 .intro,.coachtest,footer{display:none!important}main{padding:0}.panel#p5{display:block!important}.onepage{border:none;padding:0}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--ui)}
+button{font-family:var(--ui)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.top{max-width:1080px;margin:0 auto;padding:28px 20px 10px}
+.top h1{font-size:clamp(30px,5vw,48px);line-height:1.02;font-weight:800;letter-spacing:-.025em;margin:0}
+.top .club{color:var(--muted);margin:8px 0 0;font-size:15px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin-top:16px}
+.prog{display:flex;gap:4px;width:240px;max-width:100%}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog i.on{background:var(--brand)}
+.progtxt{font-size:14px;color:var(--muted)}
+.savest{font-size:13px;color:var(--muted)}
+.savest.warn{color:var(--warn)}
+
+/* shell + rail */
+.shell{max-width:1080px;margin:0 auto;padding:12px 20px 48px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:36px;align-items:start}
+.rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:4px}
+.rail button{display:flex;gap:10px;align-items:center;text-align:left;padding:9px 10px;border-radius:8px;border:1px solid transparent;background:none;color:var(--ink);font:600 15px var(--ui);cursor:pointer}
+.rail button[aria-current="step"]{background:var(--surface);border-color:var(--line)}
+.rail .n{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;flex:none;color:var(--muted)}
+.rail .done .n{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+@media (max-width:820px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:14px}
+  .rail{position:sticky;top:0;z-index:5;flex-direction:row;overflow-x:auto;background:var(--bg);padding:8px 20px;margin:0 -20px}
+  .rail button{flex:none;padding:7px 10px}
+  .rail .rl{white-space:nowrap}
+}
+
+/* content */
+main{min-width:0}
+main h2.step{font-size:clamp(24px,3.6vw,32px);line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0 0 8px}
+main h2.step:focus{outline:none}
+.lede{font-family:var(--read);color:var(--muted);margin:0 0 22px;max-width:62ch;font-size:16.5px;line-height:1.6}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;margin:0 0 18px}
+.card h3{font-size:20px;line-height:1.2;font-weight:700;letter-spacing:-.01em;margin:0 0 6px}
+.card h4{font-size:15px;font-weight:700;margin:0 0 6px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.f{display:block;margin:0 0 14px}
+.lab{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 8px}
+input[type=text],input[type=date],select,textarea{width:100%;font:400 16px/1.45 var(--ui);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{resize:vertical;min-height:88px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 16px}
+.btn{font:600 15px var(--ui);padding:10px 16px;border-radius:8px;border:1px solid var(--brand);background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--ui);cursor:pointer;transition:background .15s}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:var(--surface);color:var(--muted);padding:8px 13px;font:600 14px var(--ui);cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
+.nav-foot{display:flex;justify-content:space-between;gap:12px;margin:8px 0 0}
+
+/* ladder */
+.ladder{margin:12px 0 4px;padding:0;list-style:none}
+.ladder li{padding:8px 0 8px 14px;border-left:3px solid var(--brand);margin:0 0 8px}
+.ladder li:nth-child(2){margin-left:14px}
+.ladder li:nth-child(3){margin-left:28px}
+.ladder li:nth-child(4){margin-left:42px}
+.ladder b{display:block}
+.ladder span{color:var(--muted);font-size:14.5px}
+.moments-key{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0;font-size:14.5px}
+.moments-key span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--m);margin-right:7px}
+
+/* stage card */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.cols ul{margin:0;padding-left:18px;font-size:15px}
+.cols li{margin:0 0 6px}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--sunk);font-size:13px;font-weight:600;margin-right:6px}
+
+/* moments */
+.mbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 8px}
+.mtab{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--m);border-radius:8px;padding:10px 34px 10px 12px;cursor:pointer;color:var(--ink);font:600 15px var(--ui)}
+.mtab .msub{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.mtab[aria-selected="true"]{background:color-mix(in srgb,var(--m) 10%,var(--surface));border-color:var(--m)}
+.mtab .tick{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);font-size:11px;line-height:15px;text-align:center;color:transparent}
+.mtab.done .tick{background:var(--m);border-color:var(--m);color:var(--surface)}
+.mtab:not(:last-child)::after{content:'';position:absolute;right:-9px;top:50%;width:7px;height:7px;border-top:2px solid var(--muted);border-right:2px solid var(--muted);transform:translateY(-50%) rotate(45deg)}
+.loopnote{font-size:13.5px;color:var(--muted);margin:0 0 16px}
+@media (max-width:640px){.mbar{grid-template-columns:1fr 1fr}.mtab:not(:last-child)::after{display:none}}
+.mcard{border-left:5px solid var(--m)}
+.mcard h3{color:var(--m)}
+.q{font-family:var(--read);font-style:italic;margin:0 0 16px;color:var(--muted)}
+.ref{margin:0 0 16px;padding:14px 16px;background:var(--sunk);border-radius:8px}
+.ref .cap{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.ref blockquote{margin:0 0 10px;font-family:var(--read);font-size:15.5px;line-height:1.55}
+.ref .borrow{font-size:13px;color:var(--muted);margin:0 0 10px}
+.wc{font-size:13px;margin:-8px 0 14px;color:var(--muted)}
+.wc.ok{color:var(--ok)} .wc.warn{color:var(--warn)} .wc.bad{color:var(--bad)}
+details.help{margin:0 0 16px;font-size:14.5px}
+details.help summary{cursor:pointer;font-weight:600}
+details.help ul{margin:8px 0 0;padding-left:20px}
+
+/* principles */
+.capline{display:flex;align-items:center;gap:10px;font-weight:600;margin:0 0 6px}
+.capline .dots{display:flex;gap:5px}
+.capline i{width:13px;height:13px;border-radius:50%;border:2px solid var(--m)}
+.capline i.on{background:var(--m)}
+.pcard{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 12px;background:var(--surface)}
+.pcard.sel{border-color:var(--m);background:color-mix(in srgb,var(--m) 6%,var(--surface))}
+.ptop{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.ptop input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--m);flex:none}
+.pname{font-weight:700;font-size:17px;display:block}
+.purpose{display:block;margin:2px 0 0;color:var(--muted);font-family:var(--read);font-size:14.5px}
+.subs{margin:12px 0 0 32px;padding:0;border:0;min-width:0}
+.subs legend{font-size:13px;font-weight:600;color:var(--muted);padding:0;margin-bottom:6px}
+.subs label{display:flex;gap:10px;padding:5px 0;font-size:15px;cursor:pointer;align-items:flex-start}
+.subs input{margin:3px 0 0;accent-color:var(--m);flex:none}
+.cue{margin:10px 0 0 32px}
+.cue input{font-size:15px}
+.incl{margin:8px 0 0 32px;font-size:13.5px;color:var(--muted)}
+.custom-add{display:grid;gap:10px}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font:600 13px var(--ui);text-decoration:underline;padding:4px}
+
+/* actions */
+.agroup{margin:0 0 6px}
+.agroup h4{margin:18px 0 0}
+.arow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.arow .nm{font-weight:700}
+.arow .ct{display:block;color:var(--muted);font-size:14px;font-family:var(--read)}
+@media (max-width:700px){.arow{grid-template-columns:auto minmax(0,1fr)}.arow .seg{grid-column:1/-1}}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid currentColor;margin:0 6px 6px 0}
+.tag.r0{color:var(--r0)} .tag.r1{color:var(--r1)} .tag.r2{color:var(--r2)} .tag.rn{color:var(--muted);border-style:dashed}
+
+/* train */
+.week{display:grid;grid-template-columns:64px minmax(0,1fr);gap:6px 14px;padding:14px 0;border-top:1px solid var(--line)}
+.week .wk{font-weight:800;font-size:15px;padding-top:9px}
+.week .fields{display:grid;gap:10px}
+.week textarea{min-height:64px}
+.chk label{display:flex;gap:10px;padding:6px 0;cursor:pointer;align-items:flex-start}
+.chk input{margin:4px 0 0;width:18px;height:18px;flex:none;accent-color:var(--brand)}
+.entry{border-top:1px solid var(--line);padding:12px 0}
+.entry .eh{display:flex;justify-content:space-between;gap:10px;font-weight:600;margin:0 0 6px}
+.lrow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;padding:8px 0;border-top:1px solid var(--line)}
+.lrow:first-of-type{border-top:0}
+.empty{color:var(--muted);font-family:var(--read);font-style:italic;margin:6px 0}
+
+/* one pager */
+.op-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;align-items:center}
+#live{font-size:14px;color:var(--ok);min-height:20px;margin:0 0 12px}
+#reset-wrap{margin-top:24px;font-size:14px;color:var(--muted)}
+.foot{max-width:1080px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:13px}
+
+@media print{
+  body{background:#fff}
+  .top,.rail,.nav-foot,.op-actions,.foot,#live,#reset-wrap,.no-print{display:none!important}
+  .shell{display:block;padding:0}
+  .op{border:0!important;padding:0!important}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
+<style id="opcss"></style>
 </head>
 <body>
-<div class="app">
-<header>
-  <div style="font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Westside Metros FC • Coach Education</div>
-  <h1>One-Page Game Model Builder</h1>
-  <p>Simple. Player-centered. Achievable. • Family • Community • Respect</p>
+<noscript><div style="max-width:720px;margin:40px auto;padding:20px;border:1px solid #D3DAD5;border-radius:10px;font:16px/1.5 system-ui,sans-serif;color:#13272E;background:#fff">This workbook needs JavaScript to run. Please open it in a standard web browser (Safari, Chrome, Firefox, Edge) with JavaScript turned on, rather than in a link-preview or reader view.</div></noscript>
+<header class="top">
+  <h1>Game Model Workbook</h1>
+  <p class="club">Westside Metros FC coaching education. Build a game model your team can actually play.</p>
+  <div class="topbar">
+    <div class="prog" id="prog" role="img" aria-label="Progress"></div>
+    <span class="progtxt" id="progtxt"></span>
+    <span class="savest" id="savest"></span>
+  </div>
 </header>
-<main>
-<div class="top">
-  <div>
-    <button id="save" class="navy">Save in Browser</button>
-    <button id="export">Export Model File</button>
-    <label class="upload">Import Model File<input id="import" type="file" accept=".json" style="display:none"></label>
-  </div>
-  <div><button id="reset">Start Over</button> <button id="print" class="primary">Print / Save PDF</button></div>
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Workbook steps"></nav>
+  <main id="main"></main>
 </div>
-<div id="status" class="status"></div>
-<div class="steps">
-  <button class="step active" data-step="1">1. Team</button>
-  <button class="step" data-step="2">2. Identity</button>
-  <button class="step" data-step="3">3. Game Moments</button>
-  <button class="step" data-step="4">4. Player Actions</button>
-  <button class="step" data-step="5">5. One Page</button>
-</div>
-
-<section id="p1" class="panel active">
-<div class="grid2">
-  <div class="card">
-    <h2>Who is in front of us?</h2>
-    <p class="small">Start with the players you actually coach. Your Game Model should match their stage of development and their current needs.</p>
-    <div class="grid2">
-      <label>Team name<input id="team" value="Westside Metros FC"></label>
-      <label>Age group<select id="age"><option>U7-U8</option><option>U9-U10</option><option>U11-U12</option><option selected>U13-U14</option><option>U15-U16</option></select></label>
-      <label>Game format<input id="format" value="11v11"></label>
-      <label>Primary development focus<input id="focus" placeholder="Scanning, decision-making, combination play..."></label>
-    </div>
-    <label style="display:block;margin-top:13px">What do these players need most right now?<textarea id="needs" placeholder="Think social, emotional, cognitive, physical and soccer-development needs."></textarea></label>
-  </div>
-  <div id="guide" class="guide"></div>
-</div>
-<div class="nav"><span></span><button class="next primary" data-next="2">Next: Team Identity</button></div>
-</section>
-
-<section id="p2" class="panel">
-<div class="card">
-  <h2>Define your team identity</h2>
-  <p class="small">Choose language players can remember and behaviors people can actually see.</p>
-  <div class="grid3">
-    <label>Identity word 1<input id="i1" placeholder="Brave"></label>
-    <label>Identity word 2<input id="i2" placeholder="Connected"></label>
-    <label>Identity word 3<input id="i3" placeholder="Aggressive"></label>
-  </div>
-  <label style="display:block;margin-top:13px">Our team identity statement<textarea id="identity" placeholder="We want to be a team that..."></textarea></label>
-</div>
-<div class="nav"><button class="next" data-next="1">Back</button><button class="next primary" data-next="3">Next: Game Moments</button></div>
-</section>
-
-<section id="p3" class="panel">
-<div class="intro">
-  <h2>Build your Game Ideas, Principles & Sub-Principles</h2>
-  <p class="small">For U13-U16, you can select directly from the U.S. Soccer age-group documents supplied with this project, add your own principles, or combine both. For younger ages, the supplied overview documents define developmental goals and structure but do not include the complete age-group principle tables, so this builder does not invent them.</p>
-</div>
-<div id="moments"></div>
-<div class="nav"><button class="next" data-next="2">Back</button><button class="next primary" data-next="4">Next: Player Actions</button></div>
-</section>
-
-<section id="p4" class="panel">
-<div class="card">
-  <h2>Connect the model to Player Actions</h2>
-  <p class="small">What must players perceive, decide and execute so your principles actually happen?</p>
-  <div class="grid2">
-    <div><h3>Action families</h3><div id="actionGrid" class="actions"></div></div>
-    <label>Key player behaviors<textarea id="custom" style="min-height:260px" placeholder="Scan before receiving; open body to play forward; support at an angle; press with speed; cover inside; communicate..."></textarea></label>
-  </div>
-</div>
-<div class="nav"><button class="next" data-next="3">Back</button><button class="next primary" data-next="5">Build My One-Page Model</button></div>
-</section>
-
-<section id="p5" class="panel">
-<div class="intro"><h2>Your One-Page Game Model</h2><p class="small">Your selected U.S. Soccer principles and your custom ideas are combined here. Print this page or save it as a PDF from your browser.</p></div>
-<div id="onepage" class="onepage"></div>
-<div class="card soft coachtest"><strong>Coach test:</strong> Can players explain the Game Ideas? Can staff recognize the principles during a game? Can training deliberately teach them? If not, simplify.</div>
-</section>
-</main>
-<footer>Source-informed by the U.S. Soccer Player Development Framework documents supplied to Westside Metros FC. U.S. Soccer selections are reproduced as short principle/sub-principle labels from the supplied U13-U14 and U15-U16 learning-plan tables. Custom options are coach-created.</footer>
-</div>
+<div id="bootError" style="display:none;max-width:1080px;margin:0 auto;padding:0 20px 40px"><div style="border:1px solid var(--bad);border-radius:10px;padding:18px 20px;color:var(--ink)"><strong>This page did not fully load.</strong> Try opening it directly in a browser tab (not inside a preview, reader view, or in-app browser), or download the file version and open it locally.</div></div>
+<footer class="foot">
+  Built from the U.S. Soccer Player Development Framework (Game Model overview, Learning Plan overview, and the U13-U14, U15-U16 and U17+ Learning Plans). The source slides are marked confidential and not to be shared without U.S. Soccer approval, so keep this workbook within your club's coaching staff.
+</footer>
 
 <script>
-const ageData={
-'U7-U8':{format:'4v4',mom:['attacking','defending'],title:'Foundation Phase I',note:'Keep the model very simple. The supplied framework emphasizes scanning, receiving, dribbling, short passing, shooting, movement skills and low-structured cooperative team play.',level:'Low team structure',source:false},
-'U9-U10':{format:'7v7',mom:['attacking','defending'],title:'Foundation Phase II',note:'The supplied framework introduces low-structured team play based on a Game Model while continuing scanning, receiving, dribbling, short combination play and finishing.',level:'Low team structure',source:false},
-'U11-U12':{format:'9v9',mom:['attacking','loss','defending','win'],title:'Foundation Phase III',note:'The supplied framework moves players into moderate structured team play based on a Game Model and uses all four game moments.',level:'Moderate team structure',source:false},
-'U13-U14':{format:'11v11',mom:['attacking','loss','defending','win'],title:'Progression Phase I',note:'The supplied U13-U14 learning plan provides full Game Model tables for all four game moments. Those principles and sub-principles are selectable in this builder.',level:'High team structure',source:true},
-'U15-U16':{format:'11v11',mom:['attacking','loss','defending','win'],title:'Progression Phase II',note:'The supplied U15-U16 learning plan provides full Game Model tables with increased tactical detail. Those principles and sub-principles are selectable in this builder.',level:'High structure + positional profiles',source:true}
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------------
+   DATA
+------------------------------------------------------------------ */
+var KEY='wmfc-game-model-workbook-v1';
+var CAP=3;
+var UI_FONT="'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
+var LIGHT_VARS='--surface:#fff;--sunk:#EBEFEA;--ink:#13272E;--muted:#526369;--line:#D3DAD5;--att:#1D5FA8;--a2d:#B8460F;--def:#8A3358;--d2a:#23795C;--r0:#6F7F85;--r1:#9A6A00;--r2:#23795C;--read:Georgia,serif;--ui:'+UI_FONT;
+
+var MOMENTS=[
+  {id:'att',name:'Attacking',sub:'We have the ball',q:'What do we do when we have the ball?'},
+  {id:'a2d',name:'Losing the ball',sub:'Attacking to defending',q:'What do we do when we lose the ball?'},
+  {id:'def',name:'Defending',sub:'We do not have the ball',q:'What do we do when we do not have the ball?'},
+  {id:'d2a',name:'Regaining the ball',sub:'Defending to attacking',q:'What do we do when we regain the ball?'}
+];
+
+var AGES={
+  'U9-10':{label:'U9-U10',phase:'Foundation Phase II',fmt:'7v7',moments:['att','def'],ref:'u13',rec:2,
+    focus:['Scanning, receiving, dribbling, short combination play and finishing','Cooperative play with low-structured team play based on a game model','Only two game moments at this age: attacking and defending'],
+    expect:['A strong desire to belong and to be fair; rules matter a lot to them','Competitive, but sensitive to comparisons with peers','Can hold focus longer and learn through self-discovery'],
+    coach:['Work on one clear topic per session','Help each player understand their role; rotate positions through the season','Praise effort over outcome and avoid verbal comparisons']},
+  'U11-12':{label:'U11-U12',phase:'Foundation Phase III',fmt:'9v9',moments:['att','a2d','def','d2a'],ref:'u13',rec:2,
+    focus:['Scanning and positioning, receiving, dribbling, quick combination play and finishing','Moderately structured team play based on a game model, with roles that begin to interchange','All four game moments come into play from U11','Positional games (rondos) and 2v1 situations in attack and defense'],
+    expect:['Moving from a safe, predictable social world into a less predictable one (middle school)','Very loyal to the peer group and self-conscious about what others think','Emotions swing quickly and they do not accept authority blindly','Some players are already entering puberty, so differences begin to show'],
+    coach:['Expect players to use teammates to solve problems','Help each player develop at their own rate, without comparing','Use different kinds of questions to engage players','Keep playing players in multiple roles and positions']},
+  'U13-14':{label:'U13-U14',phase:'Progression Phase I',fmt:'11v11',moments:['att','a2d','def','d2a'],ref:'u13',rec:3,
+    focus:['Highly structured team play in a formation with defined roles and responsibilities','Quick combination play under high pressure in tight spaces','Overloads in attack and defense, midfield rotations, center backs dribbling into midfield','Anticipation and support, and understanding responsibilities off the ball'],
+    expect:['Building an identity, heavily influenced by peers, pop culture and social media','Mood swings and impulsiveness; sensitive about appearance','Girls may fear exclusion more and often underestimate their own abilities','Rapid, uneven growth and a higher injury risk, including joint laxity'],
+    coach:['Guide first, command when needed, and ask higher-order questions','Give players autonomy: player-led warm-ups and player-to-player coaching','Control workload and teach the difference between hurt and injured','Watch comparisons and put-downs, on and off the field, including social media']},
+  'U15-16':{label:'U15-U16',phase:'Progression Phase II',fmt:'11v11',moments:['att','a2d','def','d2a'],ref:'u15',rec:3,
+    focus:['Specific soccer skills based on a positional profile, with more focus on individual responsibilities within a position','A system of play inside the formation, for both attacking and defending','The full list of sub-principles in every game moment, including two new ones in each transition','Player ownership: include players in planning, player-to-player coaching, group goal setting and mutual support','Injury prevention and an aerobic base after the growth spurt'],
+    expect:['A stronger sense of self; less swayed by peers, more assertive with adults','They ask "why?" often and can handle constructive feedback','Strong emotions, but better at recognizing and controlling them','Pressure and negative self-talk can disrupt concentration; body image can be fragile'],
+    coach:['Place more focus on specific individual development','Be patient: development takes time, players mature at different rates, and growth affects performance','Use cues and key words to focus and refocus','Play games in function of each player\u2019s development, with game objectives set from the session objectives']},
+  'U17+':{label:'U17+',phase:'Progression Phase III',fmt:'11v11',moments:['att','a2d','def','d2a'],ref:'u17',rec:3,
+    focus:['A game model plus a game plan: a strategy against a specific opponent in all four moments','Tactical awareness: talk tactics with your players','Players specialize into one or two main positions','A winning mindset: learn how to win by focusing on process and controllables'],
+    expect:['More independent; can judge how useful feedback is','Better planning and self-awareness, though the "right answer" gets more complicated','Stress from rites of passage such as graduating and leaving for college','Still drawn to excitement; big egos can clash'],
+    coach:['Guide players in reflecting on game situations and their own tasks','Train individually by position, in functional groups, and as a team','Build competition into activities (for example, down a goal with X minutes left)','Keep attention on the controllables']}
+};
+var AGE_ORDER=['U9-10','U11-12','U13-14','U15-16','U17+'];
+
+var IDEAS={
+  u13:{
+    att:'When we have the ball, we want to play forward through individual actions and short combinations, to play in the attacking half in order to create chances and score goals.',
+    a2d:'When we lose the ball, we want to regain it early by reacting immediately with maximum intensity. When we recognize we are unable to pressure the ball, we recover quickly into a defending shape.',
+    def:'When we do not have the ball, we want to prevent the opponent from playing forward and regain the ball as high up the field as possible through compactness and pressing.',
+    d2a:'When we regain the ball, we immediately think and play forward, look to attack at maximum speed in order to create chances and score goals. When we recognize we cannot play forward, we keep the ball and move into our attacking shape.'
+  },
+  u17:{
+    att:'When in possession, we want to dominate by advancing the ball quickly in the attacking half with high energy and high tempo. Create balance with a minimum of 5 players ahead of the ball and use our positioning to create an advantage over the opponent, create goal scoring chances, and score.',
+    a2d:'When we lose possession, we want to regain the ball early and as high up the field as possible, by reacting immediately with maximum intensity and aggression. When we recognize we are unable to pressure the ball, we recover quickly into a compact shape.',
+    def:'When out of possession, we want to dominate by making play predictable and creating conditions to win the ball back as early and as high up the field as possible. Make the field small, reduce the opponent\u2019s time, space, and options.',
+    d2a:'When we regain possession, we immediately think and play forward, look to attack aggressively with maximum speed and finish as fast as possible. When we recognize the opponent is balanced and organized, we keep the ball and move into our attacking shape.'
+  }
 };
 
-const momentMeta={
-attacking:{label:'Attacking — We Have the Ball',q:'What do we do when we have the ball?',idea:'When we have the ball, we want to play forward through individual actions and short combinations, to play in the attacking half in order to create chances and score goals.'},
-loss:{label:'Attacking → Defending — We Lose the Ball',q:'What do we do when we lose the ball?',idea:'When we lose the ball, we want to regain it early by reacting immediately with maximum intensity. When we recognize we are unable to pressure the ball, we recover quickly into a defending shape.'},
-defending:{label:'Defending — We Do Not Have the Ball',q:'What do we do when we do not have the ball?',idea:'When we do not have the ball, we want to prevent the opponent from playing forward and regain the ball as high up the field as possible through compactness and pressing.'},
-win:{label:'Defending → Attacking — We Regain the Ball',q:'What do we do when we regain possession?',idea:'When we regain the ball, we immediately think and play forward, look to attack at maximum speed in order to create chances and score goals. When we recognize we cannot play forward, we keep the ball and move into our attacking shape.'}
+IDEAS.u15=IDEAS.u13;
+var REFNAMES={u13:'U13-U14 plan',u15:'U15-U16 plan',u17:'U17+ plan'};
+var NATIVE={'U13-14':'u13','U15-16':'u15','U17+':'u17'};
+var ROLES=[['gk','Goalkeeper'],['def','Defenders'],['mid','Midfielders'],['fwd','Forwards']];
+
+var P={
+  att:[
+    {id:'shape',name:'Create attacking shape',purpose:'Position to stretch the opponent and create space',subs:['Create appropriate height, width, depth','Create optimal attacking distances between players']},
+    {id:'options',name:'Provide options to play forward',purpose:'(Re-)position to create an advantage and receive the ball',subs:['Provide vertical or diagonal passing options','Create overload centrally or wide','Move or lose opponent when marked','Make runs behind the defensive line','Give immediate support to teammate under pressure']},
+    {id:'lines',name:'Break lines to advance the attack',purpose:'Progress the ball forward and eliminate opponents',subs:['Drive with the ball to exploit space','Engage opponent: create 1v1 or 2v1','Find a free player between or behind the lines','Switch play: pass the ball to opponent\u2019s weak zone']},
+    {id:'counter',name:'Take countermeasures: anticipate opponent counter',purpose:'Position to protect against a counterattack',subs:['Push up the defensive line with speed: stay connected and compact','Create high defensive shape behind the ball']},
+    {id:'finish',name:'Finish the attack as fast as possible',purpose:'Create a scoring opportunity and score',subs:['Separate: time run or quick movement to unmark','Final pass: through ball or combination play','Numbers in the box: fill zones in front of goal','Cross: into space or player','Take on 1v1 to create or score','Finish: use limited touches']}
+  ],
+  a2d:[
+    {id:'press',name:'Apply immediate pressure on the ball',purpose:'React quickly to win the ball back and stop the opponent\u2019s forward play',subs:['Press to regain or prevent progress of the ball','Provide cover and balance: eliminate options']},
+    {id:'delay',name:'Delay the counterattack',purpose:'Drop and narrow; reduce the opponent\u2019s speed so teammates can recover',subs:['Drop off and block direct path to goal','Slow down and dictate opponent']},
+    {id:'recover',name:'Recover with speed',purpose:'Sprint back to get balanced, organized and apply pressure',subs:['Get numbers back quickly and take defensive position','Press from behind as quickly as possible'],u17:['Stay connected: look to win the second ball']},
+    {id:'counter',name:'Take countermeasures: anticipate the counter',purpose:'Position to prepare our own counterattack',subs:['Create passing option(s): between the lines'],u17:['Create passing option(s): look to run in behind']},
+    {id:'deny',name:'Deny finish from counterattack',purpose:'Deny the scoring opportunity and prevent a goal',subs:['Defend the goal and create conditions to engage','Challenge to protect against a goal attempt']}
+  ],
+  def:[
+    {id:'shape',name:'Create defending shape',purpose:'Position to create a compact team organization and reduce space',subs:['Make team compact: vertical and horizontal','Create optimal defending distances between players']},
+    {id:'pressure',name:'Build pressure on the ball',purpose:'Create conditions to win the ball or prevent forward play',subs:['Move as a collective unit: make play predictable','Initiate pressure on the opponent with the ball','Engage when chance of regaining the ball','Provide cover and balance: eliminate passing options','Prevent the switch: keep opponent on one side'],u17:['Protect space in behind: anticipate long ball']},
+    {id:'recover',name:'Recover when pressure is broken',purpose:'Re-create conditions to win the ball and regain compactness',subs:['Immediately (re-)apply pressure on the ball','Delay attack and regain defensive shape','Look to intercept pass or win second ball']},
+    {id:'counter',name:'Take countermeasures: anticipate to counter',purpose:'Position to prepare the counterattack',subs:['Create passing option(s): between the lines'],u17:['Create passing option(s): look to run in behind']},
+    {id:'finish',name:'Deny the finish',purpose:'Prevent the opponent from scoring or creating scoring chances',subs:['Get narrow and close the center: denying the through ball','Marking and tracking opponent','Deny the cross','Defending the cross: protect the width of the goal','Challenge to protect against goal attempt']}
+  ],
+  d2a:[
+    {id:'fwd',name:'Play forward quickly',purpose:'Play forward with as few passes as possible',subs:['First action forward','Continue to play forward']},
+    {id:'secure',name:'Secure the ball',purpose:'Escape the counterpress from the closest opponents',subs:['Play out of pressure','Keep the ball and initiate build up']},
+    {id:'join',name:'Join the attack with speed',purpose:'Sprint forward to attack or support',subs:['Provide support in front of the ball','Provide support behind the ball'],u17:['Provide as much width as necessary']},
+    {id:'counter',name:'Take countermeasures: anticipate the counter',purpose:'Position to protect against a counterattack',subs:['Push up the defensive line with speed: stay connected and compact'],u17:['Create prevention shape behind the ball']},
+    {id:'finish',name:'Finish the counterattack as fast as possible',purpose:'Create a scoring opportunity and score',subs:['Create and exploit space for self or teammate','Attack space or engage opponent','Recognize player in a better position to score','Finish: use limited touches']}
+  ]
 };
 
-const usSoccer={
-'U13-U14':{
-attacking:[
- {p:'CREATE ATTACKING SHAPE',s:['Create appropriate height, width, depth','Create optimal attacking distances between players']},
- {p:'PROVIDE OPTIONS TO PLAY FORWARD',s:['Provide vertical or diagonal passing options','Overload centrally or wide','Move or lose opponent when marked','Make runs behind the defensive line','Give immediate support to teammate under pressure']},
- {p:'BREAK LINES TO ADVANCE ATTACK',s:['Drive with the ball to exploit space','Engage opponent: create 1v1 or 2v1','Find a free player between or behind the lines','Switch play: pass the ball to opponent’s weak zone']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE OPPONENT COUNTER',s:['Push up the defensive line with speed: stay connected and compact']},
- {p:'FINISH THE ATTACK AS FAST AS POSSIBLE',s:['Separate: time run or quick movement to unmark','Final pass: through ball or combination play','Numbers in the box: fill zones in front of goal','Cross: into space or player','Take on 1v1 to create or score','Finish: use limited touches']}
-],
-loss:[
- {p:'APPLY IMMEDIATE PRESSURE ON THE BALL',s:['Press to regain or prevent progress of the ball','Provide cover and balance: eliminate options']},
- {p:'DELAY THE COUNTERATTACK',s:['Drop off and block direct path to goal','Slow down and dictate opponent']},
- {p:'RECOVER WITH SPEED',s:['Get numbers back quickly and take defensive position','Press from behind as quickly as possible']},
- {p:'TAKE COUNTERMEASURES',s:['Create passing option(s): between the lines']},
- {p:'DENY FINISH FROM COUNTERATTACK',s:['Defend the goal and create conditions to engage','Challenge to protect against a goal attempt']}
-],
-defending:[
- {p:'CREATE DEFENDING SHAPE',s:['Make team compact: vertical and horizontal','(Re-) Position to create a high front line','(Re-) Position to create a high defensive line','Create optimal defending distances between players']},
- {p:'BUILD PRESSURE ON THE BALL',s:['Move as a collective unit: make play predictable','Initiate pressure on the opponent with the ball','Engage when chance of regaining the ball','Provide cover and balance: eliminate passing options','Prevent the switch: keep opponent on one side']},
- {p:'RECOVER WHEN PRESSURE IS BROKEN',s:['Immediately (re-) apply pressure on the ball','Delay attack and regain defensive shape','Look to intercept pass or win second ball']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE TO COUNTER',s:['Create passing option(s): between the lines']},
- {p:'DENY THE FINISH',s:['Get narrow and close the center: denying the through ball','Marking and tracking opponent','Deny the cross','Defending the cross: protect the width of the goal','Challenge to protect against goal attempt']}
-],
-win:[
- {p:'PLAY FORWARD QUICKLY',s:['First action forward','Continue to play forward']},
- {p:'SECURE THE BALL',s:['Play out of pressure','Keep the ball and initiate build up']},
- {p:'JOIN THE ATTACK WITH SPEED',s:['Provide support in front of the ball','Provide support behind the ball']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE THE COUNTER',s:['Push up the defensive line with speed: stay connected and compact']},
- {p:'FINISH THE COUNTERATTACK AS FAST AS POSSIBLE',s:['Create and exploit space for self or teammate','Attack space or engage opponent','Recognize player in a better position to score','Finish: use limited touches']}
-]
-},
-'U15-U16':{
-attacking:[
- {p:'CREATE ATTACKING SHAPE',s:['Create appropriate height, width, depth','Create optimal attacking distances between players']},
- {p:'PROVIDE OPTIONS TO PLAY FORWARD',s:['Provide vertical or diagonal passing options','Overload centrally or wide','Move or lose opponent when marked','Make runs behind the defensive line','Give immediate support to teammate under pressure']},
- {p:'BREAK LINES TO ADVANCE ATTACK',s:['Drive with the ball to exploit space','Engage opponent: create 1v1 or 2v1','Find a free player between or behind the lines','Switch play: pass the ball to opponent’s weak zone']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE OPPONENT COUNTER',s:['Push up the defensive line with speed: stay connected and compact','Create high defensive shape behind the ball']},
- {p:'FINISH THE ATTACK AS FAST AS POSSIBLE',s:['Separate: time run or quick movement to unmark','Final pass: through ball or combination play','Numbers in the box: fill zones in front of goal','Cross: into space or player','Take on 1v1 to create or score','Finish: use limited touches']}
-],
-loss:[
- {p:'APPLY IMMEDIATE PRESSURE ON THE BALL',s:['Press to regain or prevent progress of the ball','Provide cover and balance: eliminate options']},
- {p:'DELAY THE COUNTERATTACK',s:['Drop off and block direct path to goal','Slow down and dictate opponent']},
- {p:'RECOVER WITH SPEED',s:['Get numbers back quickly and take defensive position','Press from behind as quickly as possible','Stay connected: look to win the second ball']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE THE COUNTER',s:['Create passing option(s): between the lines','Create passing option(s): look to run in behind']},
- {p:'DENY FINISH FROM COUNTERATTACK',s:['Defend the goal and create conditions to engage','Challenge to protect against a goal attempt']}
-],
-defending:[
- {p:'CREATE DEFENDING SHAPE',s:['Make team compact: vertical and horizontal','(Re-) Position to create a high front line','(Re-) Position to create a high defensive line','Create optimal defending distances between players']},
- {p:'BUILD PRESSURE ON THE BALL',s:['Move as a collective unit: make play predictable','Initiate pressure on the opponent with the ball','Engage when chance of regaining the ball','Provide cover and balance: eliminate passing options','Prevent the switch: keep opponent on one side','Protect space in behind: anticipate long ball']},
- {p:'RECOVER WHEN PRESSURE IS BROKEN',s:['Immediately (re-) apply pressure on the ball','Delay attack and regain defensive shape','Look to intercept pass or win second ball']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE TO COUNTER',s:['Create passing option(s): between the lines','Create passing option(s): look to run in behind']},
- {p:'DENY THE FINISH',s:['Get narrow and close the center: denying the through ball','Marking and tracking opponent','Deny the cross','Defending the cross: protect the width of the goal','Challenge to protect against goal attempt']}
-],
-win:[
- {p:'PLAY FORWARD QUICKLY',s:['First action forward','Continue to play forward']},
- {p:'SECURE THE BALL',s:['Play out of pressure','Keep the ball and initiate build up']},
- {p:'JOIN THE ATTACK WITH SPEED',s:['Provide support in front of the ball','Provide as much width as necessary','Provide support behind the ball']},
- {p:'TAKE COUNTERMEASURES: ANTICIPATE THE COUNTER',s:['Push up the defensive line with speed: stay connected and compact','Create prevention shape behind the ball']},
- {p:'FINISH THE COUNTERATTACK AS FAST AS POSSIBLE',s:['Create and exploit space for self or teammate','Attack space or engage opponent','Recognize player in a better position to score','Finish: use limited touches']}
-]
+var ACTIONS=[
+  {g:'With the ball',items:[
+    ['Controlling','Receive and set the ball so your next action is fast; scan before and after the touch.'],
+    ['Protecting','Shield the ball with your body, ball on the far foot, while looking for teammates.'],
+    ['Driving','Run with the ball close and head up, using pace to gain time and territory.'],
+    ['Dribbling','Take on an opponent: read their body shape, change speed or direction, accelerate past.'],
+    ['Passing','Play the ball with purpose to a free teammate so they can keep playing forward.'],
+    ['Shooting','Strike on goal from short and mid range; check the keeper, pick a target, follow the shot.']]},
+  {g:'Awareness and positioning',items:[
+    ['Scanning','Search for the ball, teammates, opponents and the goal before and while receiving.'],
+    ['Supporting','Find open space, show for the ball, and move off your teammates.'],
+    ['Adapting body shape','Open hips and shoulders toward the goal you are attacking or defending to see more of the field.']]},
+  {g:'Against the ball',items:[
+    ['Intercepting','Read the pass, cut it out, and keep possession or attack right away.'],
+    ['Pressing','Close fast, arrive slow, and force the ball toward the area you want.'],
+    ['Challenging','Take a good defensive posture, stay on your feet, win the duel, and go again if beaten.'],
+    ['Delaying','Slow the attacker and steer them away from goal until teammates recover.'],
+    ['Blocking the shot','Get between the ball and the goal to redirect the shot.'],
+    ['Covering','Sit at the right distance behind the pressing teammate so you can step in quickly.'],
+    ['Marking','Stay close enough to stop your opponent receiving easily, see ball and player, and tighten near goal.']]}
+];
+var LEVELS=['Not yet','Growing','Reliable'];
+var RATES=['Not seen','Sometimes','Often'];
+var WORDS=['Brave','Patient','Direct','Creative','Relentless','Composed','Connected','Compact','Proactive','Playful','Resilient','Organized','Curious','Confident','Together'];
+var CHECKS=[
+  'Players make decisions in game-like activities, not only repetitions',
+  'Both feet are used',
+  'The session goal ties to one of our priority principles',
+  'Activities work in small groups or as a team, not only one player with one ball',
+  'Load fits growth and fatigue, and individuals can adjust',
+  'Players lead or explain something (a warm-up, a reflection, coaching a teammate)'
+];
+var STEPS=['Your team','Game ideas','Principles','Player actions','Train and check','One-pager'];
+
+/* ------------------------------------------------------------------
+   STATE
+------------------------------------------------------------------ */
+function fresh(){
+  return {v:1,step:1,moment:'att',
+    team:{name:'',coach:'',season:'',level:'',age:'U13-14',formation:'',ref:'auto'},
+    snap:{strengths:'',gaps:''},
+    ident:{words:[],line:''},
+    ideas:{att:'',a2d:'',def:'',d2a:''},
+    keys:{att:'',a2d:'',def:'',d2a:''},
+    picks:{},
+    custom:{att:[],a2d:[],def:[],d2a:[]},
+    actions:{},
+    weeks:[{f:'',a:'',k:''},{f:'',a:'',k:''},{f:'',a:'',k:''},{f:'',a:'',k:''}],
+    roles:{gk:'',def:'',mid:'',fwd:''},
+    checks:{},
+    log:[]};
 }
-};
+var S=fresh();
+var storeOK=true;
+var draft=null;
+var dlCap=null;
+var resetArmed=false;
+var saveTimer=null;
 
-const actions=['Scanning','Positioning','Supporting','Receiving','Passing','Dribbling / Driving','Finishing','Pressing','Covering','Marking / Tracking','Delaying','Communication','Body Shape','Protecting the Ball','Intercepting','Challenging'];
-let values={};
-const $=id=>document.getElementById(id);
-const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const age=()=>$('age').value;
-const active=()=>ageData[age()].mom;
-
-function status(t){$('status').textContent=t;$('status').classList.add('show');setTimeout(()=>$('status').classList.remove('show'),2200)}
-
-function guide(){
- const d=ageData[age()];
- $('guide').innerHTML=`<h3>${d.title}</h3><div style="font-size:1.3rem;font-weight:800">${age()} • ${d.format}</div><p class="small">${d.note}</p><div style="border:1px solid rgba(255,255,255,.35);padding:10px;border-radius:8px"><b>Recommended complexity:</b><br>${d.level}</div><p class="small">${d.mom.length===2?'Focus on Attacking and Defending.':'Use all four game moments.'}</p>${d.source?'<p class="tiny">U.S. Soccer principle selector available in Step 3.</p>':'<p class="tiny">The supplied files do not contain the complete principle tables for this age group, so only custom principles are offered.</p>'}`;
+function load(){
+  try{
+    var raw=window.localStorage.getItem(KEY);
+    if(raw){
+      var o=JSON.parse(raw), d=fresh();
+      Object.keys(d).forEach(function(k){
+        if(o[k]===undefined) return;
+        if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k])) d[k]=Object.assign(d[k],o[k]);
+        else d[k]=o[k];
+      });
+      S=d;
+    }
+  }catch(e){ storeOK=false; }
 }
-
-function defaultMomentState(){return {idea:'',sourceP:[],sourceS:[],customP:[],customS:[]}}
-
-function collect(){
- document.querySelectorAll('[data-key]').forEach(card=>{
-   const k=card.dataset.key;
-   const v=values[k]||defaultMomentState();
-   v.idea=card.querySelector('[data-r=idea]').value;
-   v.sourceP=[...card.querySelectorAll('[data-source-p]:checked')].map(x=>x.dataset.sourceP);
-   v.sourceS=[...card.querySelectorAll('[data-source-s]:checked')].map(x=>x.dataset.sourceS);
-   values[k]=v;
- });
+function persist(){
+  try{
+    window.localStorage.setItem(KEY,JSON.stringify(S));
+    storeOK=true;
+  }catch(e){ storeOK=false; }
+  paintSave();
 }
-
-function addCustom(k,type,text){
- text=(text||'').trim(); if(!text)return;
- const v=values[k]||defaultMomentState();
- const arr=type==='p'?v.customP:v.customS;
- if(!arr.includes(text))arr.push(text);
- values[k]=v; moments();
+function save(){
+  var el=document.getElementById('savest');
+  if(el&&storeOK){ el.textContent='Saving...'; el.className='savest'; }
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(persist,350);
+}
+function paintSave(){
+  var el=document.getElementById('savest'); if(!el) return;
+  if(storeOK){ el.textContent='Saved on this device'; el.className='savest'; }
+  else { el.textContent='Not saving here. Download your one-pager before you leave.'; el.className='savest warn'; }
 }
 
-function removeCustom(k,type,index){
- const v=values[k]||defaultMomentState();
- (type==='p'?v.customP:v.customS).splice(index,1);
- values[k]=v; moments();
+/* ------------------------------------------------------------------
+   HELPERS
+------------------------------------------------------------------ */
+function $(s,el){ return (el||document).querySelector(s); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function age(){ return AGES[S.team.age]||AGES['U13-14']; }
+function refKey(){ return S.team.ref==='auto'?age().ref:S.team.ref; }
+function refLabel(){ return REFNAMES[refKey()]||REFNAMES.u13; }
+function activeMoments(){ var ids=age().moments; return MOMENTS.filter(function(m){return ids.indexOf(m.id)>=0;}); }
+function mById(id){ return MOMENTS.filter(function(m){return m.id===id;})[0]; }
+function subsFor(p){ return refKey()==='u13'?p.subs:p.subs.concat(p.u17||[]); }
+function rolesOn(){ return S.team.age==='U13-14'||S.team.age==='U15-16'||S.team.age==='U17+'; }
+function rolesAny(){ return ROLES.some(function(r){return S.roles[r[0]].trim();}); }
+function words(t){ return (String(t).trim().match(/\S+/g)||[]).length; }
+function wcMsg(t){
+  var n=words(t);
+  if(!n) return {n:0,cls:'',msg:'Start with what your team does.'};
+  if(n<=45) return {n:n,cls:'ok',msg:'Short enough to remember.'};
+  if(n<=70) return {n:n,cls:'warn',msg:'Getting long. Could a player say it in one breath?'};
+  return {n:n,cls:'bad',msg:'Too long for players to hold onto. Try cutting it in half.'};
+}
+function setPath(path,val){
+  var p=path.split('.'), o=S;
+  for(var i=0;i<p.length-1;i++){ if(o[p[i]]==null) o[p[i]]={}; o=o[p[i]]; }
+  o[p[p.length-1]]=val;
+}
+function todayISO(){
+  var d=new Date(), m=d.getMonth()+1, day=d.getDate();
+  return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;
+}
+function niceDate(iso){
+  if(!iso) return '';
+  var p=iso.split('-'); if(p.length!==3) return iso;
+  var names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[+p[1]-1]+' '+(+p[2])+', '+p[0];
+}
+function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+function pickedFor(mid){
+  var out=[];
+  P[mid].forEach(function(p){
+    var k=mid+'.'+p.id, pk=S.picks[k];
+    if(pk) out.push({key:k,mid:mid,name:p.name,purpose:p.purpose,subs:pk.subs||[],cue:pk.cue||'',custom:false});
+  });
+  S.custom[mid].forEach(function(c){
+    out.push({key:mid+'.c.'+c.id,mid:mid,name:c.name,purpose:'',subs:[],cue:c.cue||'',custom:true,id:c.id});
+  });
+  return out;
+}
+function allPicked(){
+  var out=[]; activeMoments().forEach(function(m){ out=out.concat(pickedFor(m.id)); }); return out;
+}
+function mustList(){
+  var out=[];
+  ACTIONS.forEach(function(g){ g.items.forEach(function(it){
+    var a=S.actions[it[0]]; if(a&&a.must) out.push({name:it[0],cue:it[1],lvl:(a.lvl==null?null:a.lvl)});
+  });});
+  return out;
+}
+function stepDone(n){
+  switch(n){
+    case 1: return !!(S.team.name.trim()&&(S.snap.strengths.trim()||S.snap.gaps.trim())&&S.ident.words.length>0);
+    case 2: return activeMoments().every(function(m){return S.ideas[m.id].trim().length>10;});
+    case 3: return activeMoments().every(function(m){return pickedFor(m.id).length>=1;});
+    case 4: return mustList().length>=3;
+    case 5: return S.weeks.some(function(r){return r.f&&r.a.trim();});
+    case 6: return [1,2,3,4,5].every(stepDone);
+  }
+  return false;
+}
+function doneCount(){ var c=0; for(var i=1;i<=5;i++) if(stepDone(i)) c++; return c; }
+
+/* ------------------------------------------------------------------
+   CHROME (rail, progress)
+------------------------------------------------------------------ */
+function renderRail(){
+  var h='';
+  STEPS.forEach(function(t,i){
+    var n=i+1, d=stepDone(n);
+    h+='<button type="button" data-act="go" data-step="'+n+'" class="'+(d?'done':'')+'"'+(S.step===n?' aria-current="step"':'')+'><span class="n">'+(d?'\u2713':n)+'</span><span class="rl">'+esc(t)+'</span></button>';
+  });
+  $('#rail').innerHTML=h;
+  var c=doneCount(), pr='';
+  for(var i=0;i<5;i++) pr+='<i class="'+(i<c?'on':'')+'"></i>';
+  $('#prog').innerHTML=pr;
+  $('#prog').setAttribute('aria-label',c+' of 5 steps complete');
+  $('#progtxt').textContent=c+' of 5 steps complete';
+}
+function updateTabs(){
+  var tabs=document.querySelectorAll('.mtab[data-m]');
+  Array.prototype.forEach.call(tabs,function(t){
+    var id=t.getAttribute('data-m'), on=false;
+    if(S.step===2) on=S.ideas[id].trim().length>10;
+    if(S.step===3) on=pickedFor(id).length>=1;
+    t.classList.toggle('done',on);
+  });
+}
+function touch(){ save(); renderRail(); updateTabs(); }
+
+/* ------------------------------------------------------------------
+   STEP RENDERERS
+------------------------------------------------------------------ */
+function momentBar(){
+  var h='<div class="mbar" role="tablist" aria-label="Game moments">';
+  activeMoments().forEach(function(m){
+    var on=S.moment===m.id, done=S.step===2?S.ideas[m.id].trim().length>10:pickedFor(m.id).length>=1;
+    h+='<button type="button" role="tab" aria-selected="'+on+'" class="mtab'+(done?' done':'')+'" data-act="moment" data-m="'+m.id+'" style="--m:var(--'+m.id+')">'+esc(m.name)+'<span class="msub">'+esc(m.sub)+'</span><span class="tick" aria-hidden="true">\u2713</span></button>';
+  });
+  h+='</div><p class="loopnote">The moments repeat in a loop: every time the ball changes hands, the moment changes.</p>';
+  return h;
+}
+function navFoot(back,next){
+  var h='<div class="nav-foot">';
+  h+=back?'<button type="button" class="btn ghost" data-act="go" data-step="'+back+'">Back: '+esc(STEPS[back-1])+'</button>':'<span></span>';
+  h+=next?'<button type="button" class="btn" data-act="go" data-step="'+next+'">Next: '+esc(STEPS[next-1])+'</button>':'<span></span>';
+  return h+'</div>';
+}
+function head(title,lede){
+  return '<h2 class="step" id="stephead" tabindex="-1">'+esc(title)+'</h2><p class="lede">'+lede+'</p>';
 }
 
-function sourceSelector(k){
- const ageKey=age(), source=usSoccer[ageKey]&&usSoccer[ageKey][k],v=values[k]||defaultMomentState();
- if(!source){
-   return `<div class="source-box"><div class="source-title"><strong>Principles & Sub-Principles</strong><span class="source-badge">Custom Builder</span></div><div class="note small">The documents supplied in this chat do not include the full U.S. Soccer principle/sub-principle table for ${esc(ageKey)}. To keep this source-grounded, the builder will not invent one. Add your own below.</div>${customBuilder(k,v)}</div>`;
- }
- const groups=source.map((g,gi)=>{
-   const pChecked=v.sourceP.includes(g.p)?'checked':'';
-   const subs=g.s.map(s=>`<label class="sub-option"><input type="checkbox" data-source-s="${esc(s)}" data-parent="${esc(g.p)}" ${v.sourceS.includes(s)?'checked':''}><span>${esc(s)}</span></label>`).join('');
-   return `<div class="principle-group"><label class="main-principle"><input type="checkbox" data-source-p="${esc(g.p)}" ${pChecked}><span>${esc(g.p)}</span></label><div class="sub-list">${subs}</div></div>`;
- }).join('');
- return `<div class="source-box"><div class="source-title"><div><strong>Choose from U.S. Soccer</strong><div class="tiny">${esc(ageKey)} learning-plan table • select as many as fit your team</div></div><span class="source-badge">U.S. Soccer Source</span></div>${groups}${customBuilder(k,v)}</div>`;
+function step1(){
+  var a=age(), t=S.team, h='';
+  h+=head('Start with your team','A game model should fit the players you actually have. Give this step about ten minutes.');
+  h+='<section class="card"><h3>What you are building</h3><p class="sub">A game model describes how your team wants to behave on the pitch. It has four layers, and you will fill in each one.</p>'
+    +'<ul class="ladder">'
+    +'<li><b>Game idea</b><span>One or two sentences on what we are trying to do in a moment of the game. (Step 2)</span></li>'
+    +'<li><b>Principles</b><span>The guidelines players follow to decide and act together. (Step 3)</span></li>'
+    +'<li><b>Sub-principles</b><span>The smaller pieces you actually coach in a session. (Step 3)</span></li>'
+    +'<li><b>Player actions</b><span>The individual skills that make it work, like scanning, passing and pressing. (Step 4)</span></li></ul>'
+    +'<p class="sub" style="margin-top:14px">You do this for each moment of the game:</p>'
+    +'<div class="moments-key">'+MOMENTS.map(function(m){return '<span style="--m:var(--'+m.id+')">'+esc(m.name)+'</span>';}).join('')+'</div>'
+    +'<p class="sub" style="margin-top:14px">Under-10 teams focus on attacking and defending only. Keep it small: two or three priorities per moment is plenty. Plan on 60 to 75 minutes in total. Your answers save on this device as you type.</p></section>';
+
+  h+='<section class="card"><h3>About your team</h3><div class="grid2">'
+    +'<label class="f"><span class="lab">Team name</span><input type="text" data-bind="team.name" value="'+esc(t.name)+'" placeholder="Westside Metros 2012 Girls"></label>'
+    +'<label class="f"><span class="lab">Coach or coaches</span><input type="text" data-bind="team.coach" value="'+esc(t.coach)+'"></label>'
+    +'<label class="f"><span class="lab">Season</span><input type="text" data-bind="team.season" value="'+esc(t.season)+'" placeholder="Fall 2026"></label>'
+    +'<label class="f"><span class="lab">Level or league we play in</span><input type="text" data-bind="team.level" value="'+esc(t.level)+'"></label></div>'
+    +'<div class="f"><span class="lab" id="agelab">Age group</span><div class="seg" role="group" aria-labelledby="agelab">'
+    +AGE_ORDER.map(function(k){return '<button type="button" data-act="age" data-v="'+k+'" aria-pressed="'+(t.age===k)+'">'+esc(AGES[k].label)+'</button>';}).join('')
+    +'</div></div>'
+    +'<label class="f"><span class="lab">Starting formation</span><span class="hint">The framework uses a 1-4-3-3 at 11v11 as one example structure: "not the only way, but a way." Use whatever you actually play.</span><input type="text" data-bind="team.formation" value="'+esc(t.formation)+'" placeholder="1-4-3-3"></label>'
+    +'<label class="f"><span class="lab">Framework reference</span><span class="hint">The workbook holds the U13-U14, U15-U16 and U17+ plans. U9-U12 borrow the U13-U14 plan, so simplify what you take from it.</span>'
+    +'<select data-bind="team.ref" data-rerender="1"><option value="auto"'+(t.ref==='auto'?' selected':'')+'>Automatic for this age group ('+REFNAMES[a.ref]+')</option><option value="u13"'+(t.ref==='u13'?' selected':'')+'>U13-U14 plan</option><option value="u15"'+(t.ref==='u15'?' selected':'')+'>U15-U16 plan</option><option value="u17"'+(t.ref==='u17'?' selected':'')+'>U17+ plan</option></select></label></section>';
+
+  h+='<section class="card"><h3>Who is in front of you?</h3><p class="sub"><span class="badge">'+esc(a.phase)+'</span><span class="badge">'+esc(a.fmt)+'</span><span class="badge">'+a.moments.length+' game moments</span></p><div class="cols">'
+    +'<div><h4>What the framework asks for</h4><ul>'+a.focus.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>'
+    +'<div><h4>What you will see in players</h4><ul>'+a.expect.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>'
+    +'<div><h4>Coaching reminders</h4><ul>'+a.coach.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div></div></section>';
+
+  h+='<section class="card"><h3>Your players today</h3><p class="sub">Be honest. The best game model starts from what your players can do now, not from what you wish they could do.</p>'
+    +'<label class="f"><span class="lab">What do our players do well?</span><textarea data-bind="snap.strengths" placeholder="Technical, tactical, physical, mental. Anything you would build on.">'+esc(S.snap.strengths)+'</textarea></label>'
+    +'<label class="f"><span class="lab">What gets in the way of playing the way we want?</span><textarea data-bind="snap.gaps" placeholder="Skills that are missing, the level of competition, training time, roster size.">'+esc(S.snap.gaps)+'</textarea></label></section>';
+
+  h+='<section class="card"><h3>How do we want to be known?</h3><p class="sub">Pick up to three words. Then finish the sentence below.</p><div class="chips" role="group" aria-label="Team identity words">'
+    +WORDS.map(function(w){
+      var on=S.ident.words.indexOf(w)>=0, dis=!on&&S.ident.words.length>=3;
+      return '<button type="button" class="chip" data-act="word" data-w="'+esc(w)+'" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>'+esc(w)+'</button>';
+    }).join('')+'</div>'
+    +'<label class="f" style="margin-top:16px"><span class="lab">When people watch us play, they should see...</span><input type="text" data-bind="ident.line" value="'+esc(S.ident.line)+'" placeholder="a team that never stops working for each other"></label>'
+    +'<p class="hint">Check with your Director of Coaching so your model fits the club curriculum.</p></section>';
+  h+=navFoot(0,2);
+  return h;
 }
 
-function customBuilder(k,v){
- const pTags=v.customP.map((x,i)=>`<span class="tag">${esc(x)}<button type="button" data-remove-custom="${k}|p|${i}" aria-label="Remove custom principle">×</button></span>`).join('');
- const sTags=v.customS.map((x,i)=>`<span class="tag">${esc(x)}<button type="button" data-remove-custom="${k}|s|${i}" aria-label="Remove custom sub-principle">×</button></span>`).join('');
- return `<div class="custom-builder"><div class="source-title"><strong>Add Your Own</strong><span class="source-badge">Coach-Created</span></div>
- <div class="custom-row"><label>Custom Principle<input type="text" data-custom-input="${k}|p" placeholder="Example: Occupy five vertical lanes"></label><button type="button" class="navy smallbtn" data-add-custom="${k}|p">Add Principle</button></div>
- <div class="custom-list">${pTags||'<span class="tiny">No custom principles added yet.</span>'}</div>
- <div class="custom-row" style="margin-top:11px"><label>Custom Sub-Principle<input type="text" data-custom-input="${k}|s" placeholder="Example: Weak-side winger stays connected but available"></label><button type="button" class="navy smallbtn" data-add-custom="${k}|s">Add Sub-Principle</button></div>
- <div class="custom-list">${sTags||'<span class="tiny">No custom sub-principles added yet.</span>'}</div></div>`;
+function step2(){
+  var a=age(), h='', ms=activeMoments();
+  if(!mById(S.moment)||ms.map(function(m){return m.id;}).indexOf(S.moment)<0) S.moment=ms[0].id;
+  var m=mById(S.moment), ideaRef=IDEAS[refKey()][m.id], borrowed=NATIVE[S.team.age]!==refKey();
+  h+=head('Write a game idea for each moment','A game idea is what your team is trying to do in that moment. Start from the framework\u2019s wording for your age group, then make it sound like you.');
+  if(S.team.age==='U9-10') h+='<p class="hint">At U10 and below the framework focuses on two moments. The wording below comes from the U13-U14 plan, so trim it to something a nine-year-old can say.</p>';
+  h+=momentBar();
+  var r=wcMsg(S.ideas[m.id]);
+  h+='<section class="card mcard" style="--m:var(--'+m.id+')"><h3>'+esc(m.name)+'</h3><p class="q">'+esc(m.q)+'</p>'
+    +'<figure class="ref" style="margin:0 0 16px"><div class="cap">Framework idea ('+esc(refLabel())+')</div><blockquote>'+esc(ideaRef)+'</blockquote>'
+    +(borrowed?'<p class="borrow">Borrowed from the nearest framework plan. Simplify it for '+esc(a.label)+'.</p>':'')
+    +'<button type="button" class="btn ghost sm" data-act="useIdea" data-m="'+m.id+'">'+(S.ideas[m.id].trim()?'Replace mine with this':'Start from this idea')+'</button></figure>'
+    +(S.team.age==='U15-16'&&refKey()==='u15'?'<details class="help"><summary>Preview: the U17+ wording for this moment</summary><p class="hint" style="margin-top:8px">U15-U16 uses the same game ideas as U13-U14. This is where they head at U17+, with more tempo and aggression.</p><blockquote style="margin:0;font-family:var(--read);font-size:15px;line-height:1.55">'+esc(IDEAS.u17[m.id])+'</blockquote></details>':'')
+    +'<details class="help"><summary>Need help wording it?</summary><ul><li>What is the first thing we do?</li><li>How fast or how intense should we be?</li><li>What are we trying to achieve?</li><li>Template: "When we ___, we want to ___ so that ___."</li></ul></details>'
+    +'<label class="f"><span class="lab">Our game idea</span><textarea data-bind="ideas.'+m.id+'" data-wc="'+m.id+'" rows="4">'+esc(S.ideas[m.id])+'</textarea></label>'
+    +'<div class="wc '+r.cls+'" id="wc-'+m.id+'" aria-live="polite">'+r.n+' words. '+esc(r.msg)+'</div>'
+    +'<label class="f"><span class="lab">Two or three key words we will use for this moment</span><input type="text" data-bind="keys.'+m.id+'" value="'+esc(S.keys[m.id])+'" placeholder="Win it back. Now."></label>';
+  var idx=ms.map(function(x){return x.id;}).indexOf(m.id);
+  if(idx<ms.length-1) h+='<button type="button" class="btn ghost sm" data-act="moment" data-m="'+ms[idx+1].id+'">Next moment: '+esc(ms[idx+1].name)+'</button>';
+  h+='</section>';
+  h+=navFoot(1,3);
+  return h;
 }
 
-function moments(){
- collect();
- $('moments').innerHTML='';
- active().forEach(k=>{
-   const d=momentMeta[k],v=values[k]||defaultMomentState(); values[k]=v;
-   const c=document.createElement('div'); c.className='card moment '+k; c.dataset.key=k;
-   c.innerHTML=`<div class="head"><div><h3>${d.label}</h3><p class="small">${d.q}</p></div><button type="button" class="smallbtn" data-use-idea="${k}">Use U.S. Soccer Game Idea</button></div>
-   <label style="display:block;margin-top:12px">Game Idea<textarea data-r="idea" placeholder="Write one clear sentence beginning with “When we...”">${esc(v.idea)}</textarea></label>
-   ${sourceSelector(k)}`;
-   $('moments').appendChild(c);
- });
- bindMomentControls();
+function step3(){
+  var a=age(), h='', ms=activeMoments();
+  if(ms.map(function(x){return x.id;}).indexOf(S.moment)<0) S.moment=ms[0].id;
+  var m=mById(S.moment), picked=pickedFor(m.id), full=picked.length>=CAP;
+  h+=head('Choose your principles','Principles are how players decide and act together. The framework lists many, and nobody can coach them all. Pick a few per moment for this season.');
+  h+=momentBar();
+  h+='<section class="card mcard" style="--m:var(--'+m.id+')"><h3>'+esc(m.name)+'</h3><p class="q">'+esc(m.q)+'</p>'
+    +'<div class="capline"><span class="dots" aria-hidden="true">'+[0,1,2].map(function(i){return '<i class="'+(i<picked.length?'on':'')+'"></i>';}).join('')+'</span><span>'+picked.length+' of '+CAP+' chosen</span></div>'
+    +'<p class="hint">'+(a.rec<3?'For '+esc(a.label)+', start with '+a.rec+' or fewer. You can add more later.':'Two or three is plenty. Tick a principle to choose it, then pick the sub-principles you will teach first.')+'</p>';
+  P[m.id].forEach(function(p){
+    var key=m.id+'.'+p.id, pk=S.picks[key], subs=subsFor(p);
+    h+='<article class="pcard'+(pk?' sel':'')+'" style="--m:var(--'+m.id+')"><label class="ptop"><input type="checkbox" data-act="pick" data-key="'+key+'"'+(pk?' checked':'')+((!pk&&full)?' disabled':'')+'><span><span class="pname">'+esc(p.name)+'</span><span class="purpose">'+esc(p.purpose)+'</span></span></label>';
+    if(pk){
+      h+='<fieldset class="subs"><legend>Sub-principles we will teach first</legend>'
+        +subs.map(function(s,i){return '<label><input type="checkbox" data-act="sub" data-key="'+key+'" data-i="'+i+'"'+(pk.subs.indexOf(s)>=0?' checked':'')+'><span>'+esc(s)+'</span></label>';}).join('')+'</fieldset>'
+        +'<label class="cue"><span class="lab">A coaching cue in our words</span><input type="text" data-pcue="'+key+'" value="'+esc(pk.cue||'')+'" placeholder="A short phrase players will hear from you"></label>';
+    } else {
+      h+='<p class="incl">Includes: '+esc(subs.join('; '))+'</p>';
+    }
+    h+='</article>';
+  });
+  S.custom[m.id].forEach(function(c){
+    h+='<article class="pcard sel" style="--m:var(--'+m.id+')"><div class="ptop" style="cursor:default"><span><span class="pname">'+esc(c.name)+'</span><span class="purpose">Our own principle</span></span></div>'
+      +'<label class="cue"><span class="lab">A coaching cue in our words</span><input type="text" data-ccue="'+m.id+'|'+c.id+'" value="'+esc(c.cue||'')+'"></label>'
+      +'<button type="button" class="x" style="margin-left:32px" data-act="delCustom" data-m="'+m.id+'" data-id="'+c.id+'">Remove this principle</button></article>';
+  });
+  h+='<details class="help"><summary>Add a principle of our own</summary><div class="custom-add" style="margin-top:10px">'
+    +'<input type="text" id="cn-'+m.id+'" placeholder="Name it, for example: Play through the goalkeeper" aria-label="Principle name">'
+    +'<input type="text" id="cc-'+m.id+'" placeholder="Optional coaching cue" aria-label="Coaching cue">'
+    +'<div><button type="button" class="btn sm" data-act="addCustom" data-m="'+m.id+'"'+(full?' disabled':'')+'>Add principle</button>'+(full?' <span class="hint">You already have '+CAP+'. Remove one first.</span>':'')+'</div></div></details>';
+  var ms2=ms.map(function(x){return x.id;}), idx=ms2.indexOf(m.id);
+  if(idx<ms.length-1) h+='<button type="button" class="btn ghost sm" data-act="moment" data-m="'+ms[idx+1].id+'">Next moment: '+esc(ms[idx+1].name)+'</button>';
+  h+='</section>'+navFoot(2,4);
+  return h;
 }
 
-function bindMomentControls(){
- document.querySelectorAll('[data-use-idea]').forEach(b=>b.onclick=()=>{const k=b.dataset.useIdea;document.querySelector(`[data-key="${k}"] [data-r=idea]`).value=momentMeta[k].idea;collect()});
- document.querySelectorAll('[data-source-p]').forEach(cb=>cb.onchange=()=>{const card=cb.closest('[data-key]'); if(!cb.checked){card.querySelectorAll(`[data-parent="${CSS.escape(cb.dataset.sourceP)}"]`).forEach(s=>s.checked=false)} collect()});
- document.querySelectorAll('[data-source-s]').forEach(cb=>cb.onchange=()=>{const card=cb.closest('[data-key]'); if(cb.checked){const p=card.querySelector(`[data-source-p="${CSS.escape(cb.dataset.parent)}"]`);if(p)p.checked=true} collect()});
- document.querySelectorAll('[data-add-custom]').forEach(b=>b.onclick=()=>{const [k,t]=b.dataset.addCustom.split('|');const input=document.querySelector(`[data-custom-input="${k}|${t}"]`);addCustom(k,t,input.value)});
- document.querySelectorAll('[data-custom-input]').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const [k,t]=inp.dataset.customInput.split('|');addCustom(k,t,inp.value)}}));
- document.querySelectorAll('[data-remove-custom]').forEach(b=>b.onclick=()=>{const [k,t,i]=b.dataset.removeCustom.split('|');removeCustom(k,t,+i)});
+function step4(){
+  var h='', must=mustList();
+  h+=head('Match the player actions','Principles only work if players can do the individual actions behind them. Mark up to five must-haves, then rate where your team is today.');
+  h+='<section class="card"><h3>Your must-haves: '+must.length+' of 5</h3>';
+  if(!must.length) h+='<p class="empty">Start marking must-haves below. Aim for three to five.</p>';
+  else {
+    var gaps=must.filter(function(x){return x.lvl!==2;}).sort(function(x,y){return (x.lvl==null?-1:x.lvl)-(y.lvl==null?-1:y.lvl);});
+    h+='<p class="sub">'+(gaps.length?'Train these first: they matter most and are not reliable yet.':'All your must-haves are reliable. Nice. Consider raising the bar.')+'</p><div>'
+      +must.map(function(x){var c=x.lvl==null?'rn':'r'+x.lvl; return '<span class="tag '+c+'">'+esc(x.name)+': '+(x.lvl==null?'Not rated':LEVELS[x.lvl])+'</span>';}).join('')+'</div>';
+  }
+  h+='</section><section class="card">';
+  ACTIONS.forEach(function(g){
+    h+='<div class="agroup"><h4>'+esc(g.g)+'</h4>';
+    g.items.forEach(function(it){
+      var n=it[0], st=S.actions[n]||{}, on=!!st.must, dis=!on&&must.length>=5;
+      h+='<div class="arow"><button type="button" class="chip" data-act="must" data-a="'+esc(n)+'" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>Must-have</button>'
+        +'<div><span class="nm">'+esc(n)+'</span><span class="ct">'+esc(it[1])+'</span></div>'
+        +'<div class="seg" role="group" aria-label="Where is our team at with '+esc(n)+'?">'
+        +LEVELS.map(function(l,i){return '<button type="button" data-act="lvl" data-a="'+esc(n)+'" data-v="'+i+'" aria-pressed="'+(st.lvl===i)+'">'+l+'</button>';}).join('')+'</div></div>';
+    });
+    h+='</div>';
+  });
+  h+='</section>';
+  if(rolesOn()){
+    h+='<section class="card"><h3>'+(S.team.age==='U13-14'?'Roles by line':'Positional profile: roles by line')+'</h3><p class="sub">'
+      +(S.team.age==='U13-14'?'The framework asks for a formation with defined roles and responsibilities. What is each line\u2019s main job in our model?':'From U15 the framework puts more focus on individual responsibilities within a position. What is each line\u2019s most important job across the four moments?')
+      +'</p>'+ROLES.map(function(r){return '<label class="f"><span class="lab">'+esc(r[1])+'</span><textarea style="min-height:64px" data-bind="roles.'+r[0]+'" placeholder="One or two responsibilities, in plain words">'+esc(S.roles[r[0]])+'</textarea></label>';}).join('')+'</section>';
+  }
+  h+=navFoot(3,5);
+  return h;
 }
 
-function actionGrid(){
- $('actionGrid').innerHTML=actions.map(a=>`<label class="check"><input type="checkbox" data-action="${esc(a)}" ${['Scanning','Positioning','Supporting','Communication'].includes(a)?'checked':''}>${esc(a)}</label>`).join('');
+function step5(){
+  var h='', picks=allPicked();
+  h+=head('Train it and check it','Turn your priorities into a four-week block, then check in after games to see whether it is showing up.');
+  h+='<section class="card"><h3>Your first four-week block</h3><p class="sub">Pick one principle a week. Choose a game-like activity and two or three coaching key words.</p>';
+  if(!picks.length) h+='<p class="empty">Choose principles in Step 3 first, then come back here.</p>';
+  S.weeks.forEach(function(w,i){
+    h+='<div class="week"><div class="wk">Week '+(i+1)+'</div><div class="fields">'
+      +'<label><span class="lab">Focus</span><select data-bind="weeks.'+i+'.f"><option value="">Choose a principle</option>'
+      +picks.map(function(p){return '<option value="'+esc(p.key)+'"'+(w.f===p.key?' selected':'')+'>'+esc(mById(p.mid).name+': '+p.name)+'</option>';}).join('')+'</select></label>'
+      +'<label><span class="lab">Game-like activity</span><textarea data-bind="weeks.'+i+'.a" placeholder="For example: 4v4 plus two neutrals to goals. Score only after playing through the middle.">'+esc(w.a)+'</textarea></label>'
+      +'<label><span class="lab">Coaching key words</span><input type="text" data-bind="weeks.'+i+'.k" value="'+esc(w.k)+'"></label></div></div>';
+  });
+  h+='</section><section class="card chk"><h3>Session check</h3><p class="sub">Before each session, run down this list.</p>'
+    +CHECKS.map(function(c,i){return '<label><input type="checkbox" data-act="chk" data-c="'+i+'"'+(S.checks[i]?' checked':'')+'><span>'+esc(c)+'</span></label>';}).join('')+'</section>';
+
+  h+='<section class="card"><h3>Match check</h3><p class="sub">After a game, rate how often each priority showed up. Two minutes is enough.</p>';
+  if(!picks.length) h+='<p class="empty">Your priorities will show up here once you choose them.</p>';
+  else if(!draft) h+='<button type="button" class="btn sm" data-act="logOpen">Log a match</button>';
+  else {
+    h+='<div class="grid2"><label class="f"><span class="lab">Date</span><input type="date" data-draft="date" value="'+esc(draft.date)+'"></label>'
+      +'<label class="f"><span class="lab">Opponent</span><input type="text" data-draft="opp" value="'+esc(draft.opp)+'"></label></div>';
+    picks.forEach(function(p){
+      h+='<div class="lrow"><span>'+esc(p.name)+'</span><div class="seg" role="group" aria-label="How often: '+esc(p.name)+'">'
+        +RATES.map(function(l,i){return '<button type="button" data-act="lrate" data-k="'+esc(p.key)+'" data-v="'+i+'" aria-pressed="'+(draft.r[p.key]===i)+'">'+l+'</button>';}).join('')+'</div></div>';
+    });
+    h+='<label class="f" style="margin-top:12px"><span class="lab">One takeaway for training</span><textarea data-draft="note">'+esc(draft.note)+'</textarea></label>'
+      +'<button type="button" class="btn sm" data-act="logSave">Save match</button> <button type="button" class="btn ghost sm" data-act="logCancel">Cancel</button>';
+  }
+  if(S.log.length){
+    var recent=S.log.slice(0,5);
+    h+='<div style="margin-top:18px"><h4>Recent matches</h4>';
+    if(picks.length){
+      h+='<p class="sub">'+picks.map(function(p){
+        var c=0; recent.forEach(function(e){ if(e.r&&e.r[p.key]===2) c++; });
+        return esc(p.name)+': seen often in '+c+' of the last '+recent.length;
+      }).join('. ')+'.</p>';
+    }
+    S.log.forEach(function(e,i){
+      var tags=''; allPicked().forEach(function(p){ var v=e.r?e.r[p.key]:undefined; if(v!=null) tags+='<span class="tag r'+v+'">'+esc(p.name)+': '+RATES[v]+'</span>'; });
+      h+='<div class="entry"><div class="eh"><span>'+esc(niceDate(e.date))+(e.opp?' vs '+esc(e.opp):'')+'</span><button type="button" class="x" data-act="logDel" data-i="'+i+'">Delete</button></div>'+tags+(e.note?'<p class="sub" style="margin:4px 0 0">'+esc(e.note)+'</p>':'')+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='</section>'+navFoot(4,6);
+  return h;
 }
 
-const lines=v=>String(v||'').split(/\n|;/).map(x=>x.trim()).filter(Boolean);
+/* ---- one pager ---- */
+var OP_CSS=
+'.op{font-family:var(--ui);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px}'
++'.op h1{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0}'
++'.op .meta{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted);font-size:14px;margin:8px 0 0}'
++'.op .words{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}'
++'.op .w{padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-weight:600;font-size:14px}'
++'.op .line{font-family:var(--read);font-style:italic;margin:10px 0 0;color:var(--muted)}'
++'.op .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px 26px;margin-top:22px}'
++'.op .mom{border-top:4px solid var(--m);padding-top:10px;break-inside:avoid}'
++'.op .mom h3{margin:0;font-size:19px;color:var(--m)}'
++'.op .mom .ms{margin:0 0 8px;color:var(--muted);font-size:13px}'
++'.op .idea{font-family:var(--read);font-size:15px;line-height:1.5;margin:0 0 8px}'
++'.op .keys{font-weight:700;font-size:14px;margin:0 0 8px}'
++'.op ul{margin:0;padding-left:18px;font-size:14.5px}'
++'.op li{margin:0 0 6px}'
++'.op li em{display:block;color:var(--muted);font-size:13.5px}'
++'.op h2{font-size:17px;margin:26px 0 8px}'
++'.op .none{color:var(--muted);font-style:italic;font-size:14px;margin:0}'
++'.op .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid currentColor;margin:0 6px 6px 0}'
++'.op .tag.r0{color:var(--r0)}.op .tag.r1{color:var(--r1)}.op .tag.r2{color:var(--r2)}.op .tag.rn{color:var(--muted);border-style:dashed}'
++'.op .wk{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14.5px;break-inside:avoid}'
++'.op .wk b{font-weight:800}'
++'.op .wk span{display:block;color:var(--muted);font-size:13.5px}';
 
-function onepage(){
- collect();
- const ids=[$('i1').value,$('i2').value,$('i3').value].map(x=>x.trim()).filter(Boolean);
- const chosen=[...document.querySelectorAll('[data-action]:checked')].map(x=>x.dataset.action),customActions=lines($('custom').value);
- const mh=active().map(k=>{
-   const d=momentMeta[k],v=values[k]||defaultMomentState();
-   const principles=[...v.sourceP,...v.customP], subs=[...v.sourceS,...v.customS];
-   return `<div class="block"><h4>${d.label}</h4><div style="font-size:.9rem;font-weight:700">${esc(v.idea||'Game Idea not yet written.')}</div>${principles.length?`<div class="small" style="margin-top:8px;font-weight:800;text-transform:uppercase">Main Principles</div><ul>${principles.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${subs.length?`<div class="small" style="margin-top:8px;font-weight:800;text-transform:uppercase">Key Sub-Principles</div><div class="small">${subs.map(esc).join(' • ')}</div>`:''}</div>`;
- }).join('');
- $('onepage').innerHTML=`<div class="onehead"><div><div style="font-size:.75rem;font-weight:800;color:#c6283b;text-transform:uppercase;letter-spacing:.08em">Westside Metros FC</div><div style="font-size:1.55rem;font-weight:900;color:#102a43">${esc($('team').value||'Team')} Game Model</div><div class="small">${age()} • ${esc($('format').value)}${$('focus').value?' • Focus: '+esc($('focus').value):''}</div></div>${ids.length?`<div class="pills">${ids.map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`:''}</div>${$('identity').value?`<div style="margin-bottom:11px"><div class="small" style="font-weight:800;text-transform:uppercase">Team Identity</div>${esc($('identity').value)}</div>`:''}<div class="modelgrid">${mh}</div><div class="modelgrid" style="margin-top:11px"><div class="block"><h4>Player Actions</h4><div class="small">${[...chosen,...customActions].slice(0,18).map(esc).join(' • ')||'Add player actions in Step 4.'}</div></div><div class="block"><h4>Who Is In Front Of Us?</h4><div class="small">${esc($('needs').value||'Add player needs in Step 1.')}</div></div></div><div style="margin-top:12px;padding-top:9px;border-top:1px solid #d8dee6;text-align:center;font-size:.74rem;font-weight:800;color:#66717f">Family • Community • Respect</div>`;
+function onePagerBody(){
+  var a=age(), t=S.team, name=t.name.trim()||'Our team';
+  var meta=[a.label+', '+a.fmt, t.season, t.coach&&('Coach: '+t.coach), t.formation&&('Formation: '+t.formation), t.level].filter(function(x){return x&&String(x).trim();});
+  var h='<div class="op"><h1>'+esc(name)+' Game Model</h1><div class="meta">'+meta.map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
+  if(S.ident.words.length) h+='<div class="words">'+S.ident.words.map(function(w){return '<span class="w">'+esc(w)+'</span>';}).join('')+'</div>';
+  if(S.ident.line.trim()) h+='<p class="line">When people watch us play, they see '+esc(S.ident.line.trim())+'</p>';
+  h+='<div class="grid">';
+  activeMoments().forEach(function(m){
+    var ps=pickedFor(m.id), idea=S.ideas[m.id].trim();
+    h+='<section class="mom" style="--m:var(--'+m.id+')"><h3>'+esc(m.name)+'</h3><p class="ms">'+esc(m.sub)+'</p>'
+      +(idea?'<p class="idea">'+esc(idea)+'</p>':'<p class="none">Game idea not written yet.</p>')
+      +(S.keys[m.id].trim()?'<p class="keys">'+esc(S.keys[m.id].trim())+'</p>':'');
+    if(ps.length){
+      h+='<ul>'+ps.map(function(p){
+        return '<li><strong>'+esc(p.name)+'</strong>'+(p.subs.length?'<em>Teach first: '+esc(p.subs.join('; '))+'</em>':'')+(p.cue?'<em>Cue: '+esc(p.cue)+'</em>':'')+'</li>';
+      }).join('')+'</ul>';
+    } else h+='<p class="none">No principles chosen yet.</p>';
+    h+='</section>';
+  });
+  h+='</div>';
+  if(rolesOn()&&rolesAny()){
+    h+='<h2>Roles by line</h2><ul>'+ROLES.filter(function(r){return S.roles[r[0]].trim();}).map(function(r){return '<li><strong>'+esc(r[1])+'</strong><em>'+esc(S.roles[r[0]].trim())+'</em></li>';}).join('')+'</ul>';
+  }
+  h+='<h2>Must-have player actions</h2>';
+  var must=mustList();
+  h+=must.length?'<div>'+must.map(function(x){var c=x.lvl==null?'rn':'r'+x.lvl; return '<span class="tag '+c+'">'+esc(x.name)+': '+(x.lvl==null?'Not rated':LEVELS[x.lvl])+'</span>';}).join('')+'</div>':'<p class="none">Not chosen yet.</p>';
+  h+='<h2>Four-week training block</h2>';
+  var any=false, keyName={};
+  allPicked().forEach(function(p){ keyName[p.key]=mById(p.mid).name+': '+p.name; });
+  S.weeks.forEach(function(w,i){
+    if(w.f||w.a.trim()||w.k.trim()){
+      any=true;
+      h+='<div class="wk"><b>Week '+(i+1)+'</b><div>'+esc(keyName[w.f]||'No focus chosen')+(w.a.trim()?'<span>'+esc(w.a.trim())+'</span>':'')+(w.k.trim()?'<span>Key words: '+esc(w.k.trim())+'</span>':'')+'</div></div>';
+    }
+  });
+  if(!any) h+='<p class="none">Not planned yet.</p>';
+  h+='</div>';
+  return h;
+}
+function onePagerText(){
+  var a=age(), t=S.team, L=[];
+  L.push((t.name.trim()||'Our team')+' Game Model');
+  L.push([a.label+', '+a.fmt,t.season,t.coach&&('Coach: '+t.coach),t.formation&&('Formation: '+t.formation),t.level].filter(function(x){return x&&String(x).trim();}).join(' | '));
+  if(S.ident.words.length) L.push('Known for: '+S.ident.words.join(', '));
+  if(S.ident.line.trim()) L.push('When people watch us play, they see '+S.ident.line.trim());
+  activeMoments().forEach(function(m){
+    L.push('','== '+m.name.toUpperCase()+' ('+m.sub+') ==');
+    L.push('Game idea: '+(S.ideas[m.id].trim()||'(not written yet)'));
+    if(S.keys[m.id].trim()) L.push('Key words: '+S.keys[m.id].trim());
+    pickedFor(m.id).forEach(function(p){
+      L.push('- '+p.name+(p.subs.length?' | Teach first: '+p.subs.join('; '):'')+(p.cue?' | Cue: '+p.cue:''));
+    });
+  });
+  if(rolesOn()&&rolesAny()){
+    L.push('','== ROLES BY LINE ==');
+    ROLES.forEach(function(r){ if(S.roles[r[0]].trim()) L.push('- '+r[1]+': '+S.roles[r[0]].trim()); });
+  }
+  L.push('','== MUST-HAVE PLAYER ACTIONS ==');
+  var must=mustList();
+  if(must.length) must.forEach(function(x){ L.push('- '+x.name+' ('+(x.lvl==null?'not rated':LEVELS[x.lvl])+')'); }); else L.push('(not chosen yet)');
+  L.push('','== FOUR-WEEK TRAINING BLOCK ==');
+  var keyName={}; allPicked().forEach(function(p){ keyName[p.key]=mById(p.mid).name+': '+p.name; });
+  S.weeks.forEach(function(w,i){
+    if(w.f||w.a.trim()||w.k.trim()) L.push('Week '+(i+1)+': '+(keyName[w.f]||'no focus chosen')+(w.a.trim()?' | '+w.a.trim():'')+(w.k.trim()?' | Key words: '+w.k.trim():''));
+  });
+  return L.join('\n');
+}
+function downloadDoc(){
+  var title=(S.team.name.trim()||'Our team')+' Game Model';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title><style>:root{'+LIGHT_VARS+'}body{margin:0;background:#fff;color:#13272E;font-family:'+UI_FONT+'}.wrap{max-width:920px;margin:0 auto;padding:24px}.op{border:0;padding:0}'+OP_CSS+'@media print{.wrap{padding:0}}</style></head><body><div class="wrap">'+onePagerBody()+'</div></body></html>';
 }
 
-function step(n){
- document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); $('p'+n).classList.add('active');
- document.querySelectorAll('.step').forEach(b=>b.classList.toggle('active',+b.dataset.step===n));
- if(n===3)moments(); if(n===5)onepage(); window.scrollTo({top:0,behavior:'smooth'});
+function step6(){
+  var h='', c=doneCount();
+  h+=head('Your one-page Game Model','Share it with your staff and your Director of Coaching. Come back and update it as the season goes.');
+  if(c<5) h+='<p class="hint">'+(5-c)+' step'+(5-c===1?'':'s')+' still to finish. The sheet below fills in as you go.</p>';
+  h+='<div class="op-actions">'
+    +(dlCap?'<button type="button" class="btn" data-act="dl">Download as a web page</button>':'')
+    +'<button type="button" class="btn'+(dlCap?' ghost':'')+'" data-act="copy">Copy as text</button>'
+    +'<button type="button" class="btn ghost" data-act="print">Print</button></div>'
+    +'<div id="live" role="status" aria-live="polite"></div>'
+    +(!dlCap?'<p class="hint no-print">Downloading is not available in this view. Use Copy as text, or your browser\u2019s print command.</p>':'')
+    +onePagerBody();
+  h+=navFoot(5,0);
+  h+='<div id="reset-wrap" class="no-print">'+(resetArmed?'This clears everything you have entered on this device. <button type="button" class="btn sm" data-act="reset2">Yes, start over</button> <button type="button" class="btn ghost sm" data-act="reset0">Keep my work</button>':'<button type="button" class="x" data-act="reset1">Start over with a blank workbook</button>')+'</div>';
+  return h;
 }
 
-function state(){
- collect();
- return {version:2,team:$('team').value,age:$('age').value,format:$('format').value,focus:$('focus').value,needs:$('needs').value,i1:$('i1').value,i2:$('i2').value,i3:$('i3').value,identity:$('identity').value,values,actions:[...document.querySelectorAll('[data-action]:checked')].map(x=>x.dataset.action),custom:$('custom').value};
+/* ------------------------------------------------------------------
+   RENDER + EVENTS
+------------------------------------------------------------------ */
+function focusSig(el){
+  if(!el||!el.getAttribute) return null;
+  var attrs=['data-act','data-key','data-a','data-v','data-m','data-c','data-i','data-w','data-id','data-k','data-step'], sel='';
+  var any=el.getAttribute('data-act')||el.getAttribute('data-bind')||el.getAttribute('data-pcue');
+  if(!any) return null;
+  attrs.forEach(function(a){ var v=el.getAttribute(a); if(v!=null) sel+='['+a+'="'+String(v).replace(/"/g,'\\"')+'"]'; });
+  return sel||null;
+}
+function render(focusHead){
+  var sig=focusHead?null:focusSig(document.activeElement);
+  var fns=[null,step1,step2,step3,step4,step5,step6];
+  $('#main').innerHTML=fns[S.step]();
+  renderRail(); paintSave();
+  document.body.classList.toggle('on-op',S.step===6);
+  if(focusHead){ var hd=$('#stephead'); if(hd) hd.focus({preventScroll:true}); }
+  else if(sig){ try{ var el=$('#main '+sig); if(el) el.focus({preventScroll:true}); }catch(e){} }
+}
+function go(n){ S.step=n; persist(); resetArmed=false; render(true); window.scrollTo(0,0); }
+function say(msg){
+  var el=$('#live'); if(!el) return; el.textContent=msg;
+  setTimeout(function(){ var e2=$('#live'); if(e2&&e2.textContent===msg) e2.textContent=''; },5000);
+}
+function copyText(txt){
+  return new Promise(function(res){
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){res(true);},function(){res(fallbackCopy(txt));}); return; }
+    }catch(e){}
+    res(fallbackCopy(txt));
+  });
+}
+function fallbackCopy(txt){
+  try{
+    var ta=document.createElement('textarea'); ta.value=txt; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    var ok=document.execCommand('copy'); document.body.removeChild(ta); return ok;
+  }catch(e){ return false; }
 }
 
-function normalizeValues(old){
- const out={};
- Object.keys(old||{}).forEach(k=>{
-   const v=old[k]||{};
-   if(Array.isArray(v.sourceP)){out[k]={idea:v.idea||'',sourceP:v.sourceP||[],sourceS:v.sourceS||[],customP:v.customP||[],customS:v.customS||[]}}
-   else{
-     out[k]=defaultMomentState(); out[k].idea=v.idea||'';
-     out[k].customP=lines(v.p||v.principles||''); out[k].customS=lines(v.s||v.subs||'');
-   }
- });
- return out;
+var main=$('#main');
+
+main.addEventListener('input',function(e){
+  var t=e.target;
+  if(t.getAttribute('data-bind')){
+    setPath(t.getAttribute('data-bind'),t.value);
+    var wc=t.getAttribute('data-wc');
+    if(wc){ var el=$('#wc-'+wc), r=wcMsg(t.value); if(el){ el.className='wc '+r.cls; el.textContent=r.n+' words. '+r.msg; } }
+    touch();
+  } else if(t.getAttribute('data-pcue')){
+    var k=t.getAttribute('data-pcue'); if(S.picks[k]) S.picks[k].cue=t.value; save();
+  } else if(t.getAttribute('data-ccue')){
+    var pr=t.getAttribute('data-ccue').split('|'), list=S.custom[pr[0]]||[];
+    list.forEach(function(c){ if(c.id===pr[1]) c.cue=t.value; }); save();
+  } else if(t.getAttribute('data-draft')&&draft){
+    draft[t.getAttribute('data-draft')]=t.value;
+  }
+});
+main.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.tagName==='SELECT'&&t.getAttribute('data-bind')){
+    setPath(t.getAttribute('data-bind'),t.value);
+    if(t.getAttribute('data-rerender')){ persist(); render(); } else touch();
+  }
+});
+
+function onClick(e){
+  var t=e.target.closest?e.target.closest('[data-act]'):null;
+  if(!t) return;
+  var act=t.getAttribute('data-act');
+  switch(act){
+    case 'go': go(+t.getAttribute('data-step')); return;
+    case 'age':
+      S.team.age=t.getAttribute('data-v');
+      if(activeMoments().map(function(m){return m.id;}).indexOf(S.moment)<0) S.moment='att';
+      persist(); render(); return;
+    case 'word':
+      var w=t.getAttribute('data-w'), i=S.ident.words.indexOf(w);
+      if(i>=0) S.ident.words.splice(i,1); else if(S.ident.words.length<3) S.ident.words.push(w);
+      persist(); render(); return;
+    case 'moment': S.moment=t.getAttribute('data-m'); persist(); render(); return;
+    case 'useIdea': var mid=t.getAttribute('data-m'); S.ideas[mid]=IDEAS[refKey()][mid]; persist(); render(); return;
+    case 'pick':
+      var key=t.getAttribute('data-key'), m0=key.split('.')[0];
+      if(S.picks[key]) delete S.picks[key];
+      else { if(pickedFor(m0).length>=CAP) { render(); return; } S.picks[key]={subs:[],cue:''}; }
+      persist(); render(); return;
+    case 'sub':
+      var k2=t.getAttribute('data-key'), pp=k2.split('.'), pl=P[pp[0]].filter(function(x){return x.id===pp[1];})[0];
+      var sx=subsFor(pl)[+t.getAttribute('data-i')], pk=S.picks[k2];
+      if(pk&&sx!=null){ var ix=pk.subs.indexOf(sx); if(ix>=0) pk.subs.splice(ix,1); else pk.subs.push(sx); }
+      persist(); render(); return;
+    case 'addCustom':
+      var m1=t.getAttribute('data-m'), nEl=$('#cn-'+m1), cEl=$('#cc-'+m1);
+      if(nEl&&nEl.value.trim()&&pickedFor(m1).length<CAP){
+        S.custom[m1].push({id:'c'+Date.now().toString(36),name:nEl.value.trim(),cue:cEl?cEl.value.trim():''});
+        persist(); render();
+      } else if(nEl){ nEl.focus(); }
+      return;
+    case 'delCustom':
+      var m2=t.getAttribute('data-m'), id2=t.getAttribute('data-id');
+      S.custom[m2]=S.custom[m2].filter(function(c){return c.id!==id2;}); persist(); render(); return;
+    case 'must':
+      var an=t.getAttribute('data-a'), st=S.actions[an]||(S.actions[an]={});
+      if(st.must) st.must=false; else if(mustList().length<5) st.must=true;
+      persist(); render(); return;
+    case 'lvl':
+      var an2=t.getAttribute('data-a'), st2=S.actions[an2]||(S.actions[an2]={}), v=+t.getAttribute('data-v');
+      st2.lvl=(st2.lvl===v?null:v); persist(); render(); return;
+    case 'chk': var ci=t.getAttribute('data-c'); S.checks[ci]=!S.checks[ci]; persist(); return;
+    case 'logOpen': draft={date:todayISO(),opp:'',r:{},note:''}; render(); return;
+    case 'logCancel': draft=null; render(); return;
+    case 'lrate':
+      if(draft){ var lk=t.getAttribute('data-k'), lv=+t.getAttribute('data-v'); draft.r[lk]=(draft.r[lk]===lv?undefined:lv); }
+      render(); return;
+    case 'logSave':
+      if(draft){ S.log.unshift({date:draft.date,opp:draft.opp.trim(),r:draft.r,note:draft.note.trim()}); S.log.sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0;}); draft=null; persist(); render(); }
+      return;
+    case 'logDel': S.log.splice(+t.getAttribute('data-i'),1); persist(); render(); return;
+    case 'copy':
+      copyText(onePagerText()).then(function(ok){ say(ok?'Copied. Paste it into an email or a doc.':'Copy was blocked here. Select the sheet below and copy it, or use Print.'); });
+      return;
+    case 'print':
+      try{ window.print(); }catch(err){ say('Printing is blocked in this view. Use your browser\u2019s print command.'); }
+      return;
+    case 'dl':
+      if(!dlCap) return;
+      dlCap.save({filename:(slug(S.team.name)||'team')+'-game-model.html',data:downloadDoc()}).then(function(){ say('Saved.'); },function(err){ if(err&&err.code==='declined') return; say('The download did not go through. Try Copy as text instead.'); });
+      return;
+    case 'reset1': resetArmed=true; render(); return;
+    case 'reset0': resetArmed=false; render(); return;
+    case 'reset2':
+      S=fresh(); S.step=1; draft=null; resetArmed=false; persist(); render(true); window.scrollTo(0,0); return;
+  }
 }
+document.addEventListener('click',onClick);
 
-function apply(s){
- if(!s)return;
- ['team','age','format','focus','needs','i1','i2','i3','identity','custom'].forEach(k=>{if(s[k]!=null)$(k).value=s[k]});
- values=normalizeValues(s.values||s.moments||{});
- document.querySelectorAll('[data-action]').forEach(x=>x.checked=(s.actions||[]).includes(x.dataset.action));
- guide(); moments(); onepage();
+/* ------------------------------------------------------------------
+   INIT
+------------------------------------------------------------------ */
+try{
+  document.getElementById('opcss').textContent=OP_CSS;
+  load();
+  if(S.step<1||S.step>6) S.step=1;
+  render(false);
+  paintSave();
+}catch(bootErr){
+  var be=document.getElementById('bootError'); if(be) be.style.display='block';
 }
-
-document.querySelectorAll('.step').forEach(b=>b.onclick=()=>step(+b.dataset.step));
-document.querySelectorAll('.next').forEach(b=>b.onclick=()=>step(+b.dataset.next));
-$('age').onchange=()=>{$('format').value=ageData[age()].format;values={};guide();moments()};
-$('save').onclick=()=>{localStorage.setItem('wsmGameModelV2',JSON.stringify(state()));status('Saved in this browser.')};
-$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=($('team').value||'team').replace(/[^a-z0-9]+/gi,'_')+'_Game_Model.json';a.click();URL.revokeObjectURL(a.href)};
-$('import').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{apply(JSON.parse(r.result));status('Model imported.')}catch(_){alert('That file could not be read.')}};r.readAsText(f)};
-$('print').onclick=()=>{step(5);setTimeout(()=>window.print(),100)};
-$('reset').onclick=()=>{if(!confirm('Clear this Game Model and start over?'))return;localStorage.removeItem('wsmGameModelV2');values={};document.querySelectorAll('input[type=text],textarea').forEach(x=>x.value='');$('team').value='Westside Metros FC';$('age').value='U13-U14';$('format').value='11v11';actionGrid();guide();step(1)};
-document.addEventListener('input',()=>{if($('p5').classList.contains('active'))onepage()});
-document.addEventListener('change',()=>{if($('p5').classList.contains('active'))onepage()});
-
-actionGrid();guide();
-const saved=localStorage.getItem('wsmGameModelV2');
-if(saved){try{apply(JSON.parse(saved));status('Loaded your saved Game Model.')}catch(_){}}
+try{
+  if(window.claude&&typeof window.claude.use==='function'){
+    window.claude.use('downloads').then(function(d){ if(d){ dlCap=d; if(S.step===6) render(); } },function(){});
+  }
+}catch(e){}
+window.addEventListener('error',function(){
+  if(!document.querySelector('#main').children.length){
+    var be2=document.getElementById('bootError'); if(be2) be2.style.display='block';
+  }
+});
+})();
 </script>
-</body></html>
+</body>
+</html>
