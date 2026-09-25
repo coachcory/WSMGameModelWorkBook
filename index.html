@@ -164,10 +164,25 @@ details.help ul{margin:8px 0 0;padding-left:20px}
 .tag.r0{color:var(--r0)} .tag.r1{color:var(--r1)} .tag.r2{color:var(--r2)} .tag.rn{color:var(--muted);border-style:dashed}
 
 /* train */
-.week{display:grid;grid-template-columns:64px minmax(0,1fr);gap:6px 14px;padding:14px 0;border-top:1px solid var(--line)}
-.week .wk{font-weight:800;font-size:15px;padding-top:9px}
-.week .fields{display:grid;gap:10px}
-.week textarea{min-height:64px}
+.wkd{border-top:1px solid var(--line)}
+.wkd>summary{cursor:pointer;list-style:none;padding:14px 0;font-weight:800;font-size:15.5px;display:flex;align-items:center;gap:8px}
+.wkd>summary::-webkit-details-marker{display:none}
+.wkd>summary::before{content:'';width:7px;height:7px;border-top:2px solid var(--muted);border-right:2px solid var(--muted);transform:rotate(45deg);flex:none}
+.wkd[open]>summary::before{transform:rotate(135deg)}
+.wkd .wksub{font-weight:400;font-size:13.5px;color:var(--muted)}
+.sessgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 0 18px}
+@media (max-width:700px){.sessgrid{grid-template-columns:1fr}}
+.sess{background:var(--sunk);border-radius:8px;padding:14px}
+.sess h5{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.sess .fld{display:block;margin:0 0 12px}
+.sess textarea{min-height:58px}
+.beh-cap{font-size:13px;color:var(--muted);margin:0 0 6px}
+.beh-g .gl{font-size:12.5px;color:var(--muted);font-weight:600;margin:8px 0 5px}
+.beh-g:first-child .gl{margin-top:0}
+.beh-chips{display:flex;flex-wrap:wrap;gap:6px}
+.beh-chip{padding:4px 11px;font-size:13px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font:600 13px var(--ui)}
+.beh-chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.beh-chip:disabled{opacity:.45;cursor:not-allowed}
 .chk label{display:flex;gap:10px;padding:6px 0;cursor:pointer;align-items:flex-start}
 .chk input{margin:4px 0 0;width:18px;height:18px;flex:none;accent-color:var(--brand)}
 .entry{border-top:1px solid var(--line);padding:12px 0}
@@ -330,6 +345,24 @@ var ACTIONS=[
 var LEVELS=['Not yet','Growing','Reliable'];
 var RATES=['Not seen','Sometimes','Often'];
 var WORDS=['Brave','Patient','Direct','Creative','Relentless','Composed','Connected','Compact','Proactive','Playful','Resilient','Organized','Curious','Confident','Together'];
+var BEHAVIOR_GROUPS=[
+  {g:'Core quality',items:[
+    'Game understanding and decision making','Technical execution (comfort on the ball)','Physical execution (movement and fitness)',
+    'Growth mindset and winning mentality','Responsibility and self-regulation','Learning ability']},
+  {g:'Decision-making trait',items:[
+    'Scans before receiving','Reads teammates and opponents','Recognizes space, time and risk',
+    'Processes information and acts fast','Manages the pace of play','Understands their role in the shape',
+    'Repositions early to support or cover','Adapts body shape to see more of the field','Finds creative solutions under pressure']},
+  {g:'Proactive habit',items:[
+    'Takes ownership of their own progress','Takes initiative without being told','Prepares for every session',
+    'Reflects honestly on their own performance','Welcomes feedback and asks questions','Communicates with coaches and teammates',
+    'Holds themselves accountable','Builds up teammates']}
+];
+var BEHAVIOR_CAP=3;
+function newSession(){ return {f:'',b:[],a:'',k:'',bx:''}; }
+function newWeek(){ return {s1:newSession(),s2:newSession()}; }
+function sessionFilled(s){ return !!(s.f||s.a.trim()||s.b.length||s.bx.trim()); }
+
 var CHECKS=[
   'Players make decisions in game-like activities, not only repetitions',
   'Both feet are used',
@@ -353,7 +386,7 @@ function fresh(){
     picks:{},
     custom:{att:[],a2d:[],def:[],d2a:[]},
     actions:{},
-    weeks:[{f:'',a:'',k:''},{f:'',a:'',k:''},{f:'',a:'',k:''},{f:'',a:'',k:''}],
+    weeks:[newWeek(),newWeek(),newWeek(),newWeek(),newWeek(),newWeek()],
     roles:{gk:'',def:'',mid:'',fwd:''},
     checks:{},
     log:[]};
@@ -376,6 +409,10 @@ function load(){
         else d[k]=o[k];
       });
       S=d;
+      if(S.weeks&&S.weeks.length&&S.weeks[0]&&!S.weeks[0].s1){
+        var old=S.weeks; S.weeks=fresh().weeks;
+        old.forEach(function(w,i){ if(i<6&&w){ S.weeks[i].s1.f=w.f||''; S.weeks[i].s1.a=w.a||''; S.weeks[i].s1.k=w.k||''; } });
+      }
     }
   }catch(e){ storeOK=false; }
 }
@@ -463,7 +500,7 @@ function stepDone(n){
     case 2: return activeMoments().every(function(m){return S.ideas[m.id].trim().length>10;});
     case 3: return activeMoments().every(function(m){return pickedFor(m.id).length>=1;});
     case 4: return mustList().length>=3;
-    case 5: return S.weeks.some(function(r){return r.f&&r.a.trim();});
+    case 5: return S.weeks.some(function(w){return sessionFilled(w.s1)||sessionFilled(w.s2);});
     case 6: return [1,2,3,4,5].every(stepDone);
   }
   return false;
@@ -522,13 +559,15 @@ function head(title,lede){
 function step1(){
   var a=age(), t=S.team, h='';
   h+=head('Start with your team','A game model should fit the players you actually have. Give this step about ten minutes.');
-  h+='<section class="card"><h3>What you are building</h3><p class="sub">A game model describes how your team wants to behave on the pitch. It has four layers, and you will fill in each one.</p>'
+  h+='<section class="card"><h3>What you are building</h3><p class="sub">Your <strong>team style of play</strong> (also called team identity) comes first: who you are and how you want to play, before anything tactical. That shapes your <strong>game model</strong> &mdash; the description of how your team behaves on the pitch. A game model is not a separate step; it is the name for everything below, taken together.</p>'
+    +'<ul class="ladder found"><li><b>Team style of play</b><span>Who we are and how we want to play. The foundation everything else is built on. (below)</span></li></ul>'
+    +'<p class="sub" style="margin:16px 0 6px"><strong>Together, these four layers make up your game model:</strong></p>'
     +'<ul class="ladder">'
-    +'<li><b>Game idea</b><span>One or two sentences on what we are trying to do in a moment of the game. (Step 2)</span></li>'
-    +'<li><b>Principles</b><span>The guidelines players follow to decide and act together. (Step 3)</span></li>'
-    +'<li><b>Sub-principles</b><span>The smaller pieces you actually coach in a session. (Step 3)</span></li>'
+    +'<li><b>Game idea</b><span>The tactical intention for a moment of the game, shaped by our identity, our players, and how we want to compete. (Step 2)</span></li>'
+    +'<li><b>Principles</b><span>The guidelines players follow to decide and act together in that moment. (Step 3)</span></li>'
+    +'<li><b>Sub-principles</b><span>The more specific pieces of a principle, the smaller pieces you actually coach in a session. (Step 3)</span></li>'
     +'<li><b>Player actions</b><span>The individual skills that make it work, like scanning, passing and pressing. (Step 4)</span></li></ul>'
-    +'<p class="sub" style="margin-top:14px">You do this for each moment of the game:</p>'
+    +'<p class="sub" style="margin-top:14px">You write a game idea, principles and sub-principles for each moment of the game:</p>'
     +'<div class="moments-key">'+MOMENTS.map(function(m){return '<span style="--m:var(--'+m.id+')">'+esc(m.name)+'</span>';}).join('')+'</div>'
     +'<p class="sub" style="margin-top:14px">Under-10 teams focus on attacking and defending only. Keep it small: two or three priorities per moment is plenty. Plan on 60 to 75 minutes in total. Your answers save on this device as you type.</p></section>';
 
@@ -544,6 +583,14 @@ function step1(){
     +'<label class="f"><span class="lab">Framework reference</span><span class="hint">The workbook holds the U13-U14, U15-U16 and U17+ plans. U9-U12 borrow the U13-U14 plan, so simplify what you take from it.</span>'
     +'<select data-bind="team.ref" data-rerender="1"><option value="auto"'+(t.ref==='auto'?' selected':'')+'>Automatic for this age group ('+REFNAMES[a.ref]+')</option><option value="u13"'+(t.ref==='u13'?' selected':'')+'>U13-U14 plan</option><option value="u15"'+(t.ref==='u15'?' selected':'')+'>U15-U16 plan</option><option value="u17"'+(t.ref==='u17'?' selected':'')+'>U17+ plan</option></select></label></section>';
 
+  h+='<section class="card"><h3>Team style of play (team identity)</h3><p class="sub">Before you write a game idea, decide who you are as a team. Your style of play is influenced by things like your club culture, your region and history, your players, and your own coaching philosophy &mdash; and it is the foundation your game model is built on. Pick up to three words, then finish the sentence below.</p><div class="chips" role="group" aria-label="Team identity words">'
+    +WORDS.map(function(w){
+      var on=S.ident.words.indexOf(w)>=0, dis=!on&&S.ident.words.length>=3;
+      return '<button type="button" class="chip" data-act="word" data-w="'+esc(w)+'" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>'+esc(w)+'</button>';
+    }).join('')+'</div>'
+    +'<label class="f" style="margin-top:16px"><span class="lab">When people watch us play, they should see...</span><input type="text" data-bind="ident.line" value="'+esc(S.ident.line)+'" placeholder="a team that never stops working for each other"></label>'
+    +'<p class="hint">Check with your Director of Coaching so your model fits the club curriculum.</p></section>';
+
   h+='<section class="card"><h3>Who is in front of you?</h3><p class="sub"><span class="badge">'+esc(a.phase)+'</span><span class="badge">'+esc(a.fmt)+'</span><span class="badge">'+a.moments.length+' game moments</span></p><div class="cols">'
     +'<div><h4>What the framework asks for</h4><ul>'+a.focus.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>'
     +'<div><h4>What you will see in players</h4><ul>'+a.expect.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>'
@@ -552,14 +599,6 @@ function step1(){
   h+='<section class="card"><h3>Your players today</h3><p class="sub">Be honest. The best game model starts from what your players can do now, not from what you wish they could do.</p>'
     +'<label class="f"><span class="lab">What do our players do well?</span><textarea data-bind="snap.strengths" placeholder="Technical, tactical, physical, mental. Anything you would build on.">'+esc(S.snap.strengths)+'</textarea></label>'
     +'<label class="f"><span class="lab">What gets in the way of playing the way we want?</span><textarea data-bind="snap.gaps" placeholder="Skills that are missing, the level of competition, training time, roster size.">'+esc(S.snap.gaps)+'</textarea></label></section>';
-
-  h+='<section class="card"><h3>How do we want to be known?</h3><p class="sub">Pick up to three words. Then finish the sentence below.</p><div class="chips" role="group" aria-label="Team identity words">'
-    +WORDS.map(function(w){
-      var on=S.ident.words.indexOf(w)>=0, dis=!on&&S.ident.words.length>=3;
-      return '<button type="button" class="chip" data-act="word" data-w="'+esc(w)+'" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>'+esc(w)+'</button>';
-    }).join('')+'</div>'
-    +'<label class="f" style="margin-top:16px"><span class="lab">When people watch us play, they should see...</span><input type="text" data-bind="ident.line" value="'+esc(S.ident.line)+'" placeholder="a team that never stops working for each other"></label>'
-    +'<p class="hint">Check with your Director of Coaching so your model fits the club curriculum.</p></section>';
   h+=navFoot(0,2);
   return h;
 }
@@ -576,6 +615,7 @@ function step2(){
     +'<figure class="ref" style="margin:0 0 16px"><div class="cap">Framework idea ('+esc(refLabel())+')</div><blockquote>'+esc(ideaRef)+'</blockquote>'
     +(borrowed?'<p class="borrow">Borrowed from the nearest framework plan. Simplify it for '+esc(a.label)+'.</p>':'')
     +'<button type="button" class="btn ghost sm" data-act="useIdea" data-m="'+m.id+'">'+(S.ideas[m.id].trim()?'Replace mine with this':'Start from this idea')+'</button></figure>'
+    +'<details class="help"><summary>What is a game idea?</summary><p class="hint" style="margin-top:8px">Your tactical intention for this moment of the game &mdash; what you are trying to achieve. It grows out of your team style of play, and things like your region, your history, your players, and your own philosophy as a coach. Your principles and player actions are how the idea actually shows up on the field.</p></details>'
     +(S.team.age==='U15-16'&&refKey()==='u15'?'<details class="help"><summary>Preview: the U17+ wording for this moment</summary><p class="hint" style="margin-top:8px">U15-U16 uses the same game ideas as U13-U14. This is where they head at U17+, with more tempo and aggression.</p><blockquote style="margin:0;font-family:var(--read);font-size:15px;line-height:1.55">'+esc(IDEAS.u17[m.id])+'</blockquote></details>':'')
     +'<details class="help"><summary>Need help wording it?</summary><ul><li>What is the first thing we do?</li><li>How fast or how intense should we be?</li><li>What are we trying to achieve?</li><li>Template: "When we ___, we want to ___ so that ___."</li></ul></details>'
     +'<label class="f"><span class="lab">Our game idea</span><textarea data-bind="ideas.'+m.id+'" data-wc="'+m.id+'" rows="4">'+esc(S.ideas[m.id])+'</textarea></label>'
@@ -596,7 +636,8 @@ function step3(){
   h+=momentBar();
   h+='<section class="card mcard" style="--m:var(--'+m.id+')"><h3>'+esc(m.name)+'</h3><p class="q">'+esc(m.q)+'</p>'
     +'<div class="capline"><span class="dots" aria-hidden="true">'+[0,1,2].map(function(i){return '<i class="'+(i<picked.length?'on':'')+'"></i>';}).join('')+'</span><span>'+picked.length+' of '+CAP+' chosen</span></div>'
-    +'<p class="hint">'+(a.rec<3?'For '+esc(a.label)+', start with '+a.rec+' or fewer. You can add more later.':'Two or three is plenty. Tick a principle to choose it, then pick the sub-principles you will teach first.')+'</p>';
+    +'<p class="hint">'+(a.rec<3?'For '+esc(a.label)+', start with '+a.rec+' or fewer. You can add more later.':'Two or three is plenty. Tick a principle to choose it, then pick the sub-principles you will teach first.')+'</p>'
+    +'<details class="help"><summary>What is the difference between a principle and a sub-principle?</summary><p class="hint" style="margin-top:8px">A <strong>principle</strong> is a guideline for how a player or group of players should decide and act in a situation, based on our game idea. A <strong>sub-principle</strong> is a more specific piece of that guideline &mdash; the part you can actually put into a coaching cue and a training activity.</p></details>';
   P[m.id].forEach(function(p){
     var key=m.id+'.'+p.id, pk=S.picks[key], subs=subsFor(p);
     h+='<article class="pcard'+(pk?' sel':'')+'" style="--m:var(--'+m.id+')"><label class="ptop"><input type="checkbox" data-act="pick" data-key="'+key+'"'+(pk?' checked':'')+((!pk&&full)?' disabled':'')+'><span><span class="pname">'+esc(p.name)+'</span><span class="purpose">'+esc(p.purpose)+'</span></span></label>';
@@ -656,17 +697,33 @@ function step4(){
   return h;
 }
 
+function sessCard(wi,skey,label,sess,picks){
+  var used=sess.b.length, full=used>=BEHAVIOR_CAP;
+  var h='<div class="sess"><h5>'+esc(label)+'</h5>'
+    +'<label class="fld"><span class="lab">Focus principle</span><select data-bind="weeks.'+wi+'.'+skey+'.f"><option value="">Choose a principle</option>'
+    +picks.map(function(p){return '<option value="'+esc(p.key)+'"'+(sess.f===p.key?' selected':'')+'>'+esc(mById(p.mid).name+': '+p.name)+'</option>';}).join('')+'</select></label>'
+    +'<div class="fld"><span class="lab">Behaviors to coach</span><p class="beh-cap">'+used+' of '+BEHAVIOR_CAP+' chosen</p>';
+  BEHAVIOR_GROUPS.forEach(function(g){
+    h+='<div class="beh-g"><p class="gl">'+esc(g.g)+'</p><div class="beh-chips">'
+      +g.items.map(function(b){
+        var on=sess.b.indexOf(b)>=0;
+        return '<button type="button" class="beh-chip" data-act="beh" data-key="'+wi+'.'+skey+'" data-b="'+esc(b)+'" aria-pressed="'+on+'"'+((!on&&full)?' disabled':'')+'>'+esc(b)+'</button>';
+      }).join('')+'</div></div>';
+  });
+  h+='<input type="text" style="margin-top:8px" data-bind="weeks.'+wi+'.'+skey+'.bx" value="'+esc(sess.bx)+'" placeholder="Or add one in your own words"></div>'
+    +'<label class="fld" style="margin-top:12px"><span class="lab">Game-like activity</span><textarea data-bind="weeks.'+wi+'.'+skey+'.a" placeholder="For example: 4v4 plus two neutrals to goals. Score only after playing through the middle.">'+esc(sess.a)+'</textarea></label>'
+    +'<label class="fld"><span class="lab">Coaching key words</span><input type="text" data-bind="weeks.'+wi+'.'+skey+'.k" value="'+esc(sess.k)+'"></label></div>';
+  return h;
+}
 function step5(){
   var h='', picks=allPicked();
-  h+=head('Train it and check it','Turn your priorities into a four-week block, then check in after games to see whether it is showing up.');
-  h+='<section class="card"><h3>Your first four-week block</h3><p class="sub">Pick one principle a week. Choose a game-like activity and two or three coaching key words.</p>';
+  h+=head('Train it and check it','Turn your priorities into a six-week training cycle, two sessions a week, then check in after games to see whether it is showing up. This cycle is the block you will later fit into your periodization and development plan.');
+  h+='<section class="card"><h3>Your six-week training cycle</h3><p class="sub">Each session gets a focus principle, one or two behaviors to coach, a game-like activity and a few coaching key words. Behaviors are grouped the way U.S. Soccer describes them: core qualities, decision-making traits, and proactive habits. These are a starting point, not a requirement &mdash; use your own words for a behavior any time it fits your team better.</p>';
   if(!picks.length) h+='<p class="empty">Choose principles in Step 3 first, then come back here.</p>';
   S.weeks.forEach(function(w,i){
-    h+='<div class="week"><div class="wk">Week '+(i+1)+'</div><div class="fields">'
-      +'<label><span class="lab">Focus</span><select data-bind="weeks.'+i+'.f"><option value="">Choose a principle</option>'
-      +picks.map(function(p){return '<option value="'+esc(p.key)+'"'+(w.f===p.key?' selected':'')+'>'+esc(mById(p.mid).name+': '+p.name)+'</option>';}).join('')+'</select></label>'
-      +'<label><span class="lab">Game-like activity</span><textarea data-bind="weeks.'+i+'.a" placeholder="For example: 4v4 plus two neutrals to goals. Score only after playing through the middle.">'+esc(w.a)+'</textarea></label>'
-      +'<label><span class="lab">Coaching key words</span><input type="text" data-bind="weeks.'+i+'.k" value="'+esc(w.k)+'"></label></div></div>';
+    var n=(sessionFilled(w.s1)?1:0)+(sessionFilled(w.s2)?1:0);
+    h+='<details class="wkd"'+(i===0||n?' open':'')+'><summary>Week '+(i+1)+' <span class="wksub">'+n+' of 2 sessions planned</span></summary>'
+      +'<div class="sessgrid">'+sessCard(i,'s1','Session 1',w.s1,picks)+sessCard(i,'s2','Session 2',w.s2,picks)+'</div></details>';
   });
   h+='</section><section class="card chk"><h3>Session check</h3><p class="sub">Before each session, run down this list.</p>'
     +CHECKS.map(function(c,i){return '<label><input type="checkbox" data-act="chk" data-c="'+i+'"'+(S.checks[i]?' checked':'')+'><span>'+esc(c)+'</span></label>';}).join('')+'</section>';
@@ -711,6 +768,7 @@ var OP_CSS=
 +'.op .words{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}'
 +'.op .w{padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-weight:600;font-size:14px}'
 +'.op .line{font-family:var(--read);font-style:italic;margin:10px 0 0;color:var(--muted)}'
++'.op .op-lab{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}'
 +'.op .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px 26px;margin-top:22px}'
 +'.op .mom{border-top:4px solid var(--m);padding-top:10px;break-inside:avoid}'
 +'.op .mom h3{margin:0;font-size:19px;color:var(--m)}'
@@ -732,6 +790,7 @@ function onePagerBody(){
   var a=age(), t=S.team, name=t.name.trim()||'Our team';
   var meta=[a.label+', '+a.fmt, t.season, t.coach&&('Coach: '+t.coach), t.formation&&('Formation: '+t.formation), t.level].filter(function(x){return x&&String(x).trim();});
   var h='<div class="op"><h1>'+esc(name)+' Game Model</h1><div class="meta">'+meta.map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
+  if(S.ident.words.length||S.ident.line.trim()) h+='<p class="op-lab">Team style of play</p>';
   if(S.ident.words.length) h+='<div class="words">'+S.ident.words.map(function(w){return '<span class="w">'+esc(w)+'</span>';}).join('')+'</div>';
   if(S.ident.line.trim()) h+='<p class="line">When people watch us play, they see '+esc(S.ident.line.trim())+'</p>';
   h+='<div class="grid">';
@@ -754,15 +813,19 @@ function onePagerBody(){
   h+='<h2>Must-have player actions</h2>';
   var must=mustList();
   h+=must.length?'<div>'+must.map(function(x){var c=x.lvl==null?'rn':'r'+x.lvl; return '<span class="tag '+c+'">'+esc(x.name)+': '+(x.lvl==null?'Not rated':LEVELS[x.lvl])+'</span>';}).join('')+'</div>':'<p class="none">Not chosen yet.</p>';
-  h+='<h2>Four-week training block</h2>';
+  h+='<h2>Six-week training cycle</h2>';
   var any=false, keyName={};
   allPicked().forEach(function(p){ keyName[p.key]=mById(p.mid).name+': '+p.name; });
-  S.weeks.forEach(function(w,i){
-    if(w.f||w.a.trim()||w.k.trim()){
-      any=true;
-      h+='<div class="wk"><b>Week '+(i+1)+'</b><div>'+esc(keyName[w.f]||'No focus chosen')+(w.a.trim()?'<span>'+esc(w.a.trim())+'</span>':'')+(w.k.trim()?'<span>Key words: '+esc(w.k.trim())+'</span>':'')+'</div></div>';
-    }
-  });
+  function sessLine(lab,s){
+    if(!sessionFilled(s)) return '';
+    any=true;
+    var beh=s.b.slice(); if(s.bx.trim()) beh.push(s.bx.trim());
+    return '<div class="wk"><b>'+esc(lab)+'</b><div>'+esc(keyName[s.f]||'No focus chosen')
+      +(beh.length?'<span>Behaviors: '+esc(beh.join('; '))+'</span>':'')
+      +(s.a.trim()?'<span>'+esc(s.a.trim())+'</span>':'')
+      +(s.k.trim()?'<span>Key words: '+esc(s.k.trim())+'</span>':'')+'</div></div>';
+  }
+  S.weeks.forEach(function(w,i){ h+=sessLine('Week '+(i+1)+', Session 1',w.s1)+sessLine('Week '+(i+1)+', Session 2',w.s2); });
   if(!any) h+='<p class="none">Not planned yet.</p>';
   h+='</div>';
   return h;
@@ -771,7 +834,7 @@ function onePagerText(){
   var a=age(), t=S.team, L=[];
   L.push((t.name.trim()||'Our team')+' Game Model');
   L.push([a.label+', '+a.fmt,t.season,t.coach&&('Coach: '+t.coach),t.formation&&('Formation: '+t.formation),t.level].filter(function(x){return x&&String(x).trim();}).join(' | '));
-  if(S.ident.words.length) L.push('Known for: '+S.ident.words.join(', '));
+  if(S.ident.words.length) L.push('Style of play: '+S.ident.words.join(', '));
   if(S.ident.line.trim()) L.push('When people watch us play, they see '+S.ident.line.trim());
   activeMoments().forEach(function(m){
     L.push('','== '+m.name.toUpperCase()+' ('+m.sub+') ==');
@@ -788,11 +851,14 @@ function onePagerText(){
   L.push('','== MUST-HAVE PLAYER ACTIONS ==');
   var must=mustList();
   if(must.length) must.forEach(function(x){ L.push('- '+x.name+' ('+(x.lvl==null?'not rated':LEVELS[x.lvl])+')'); }); else L.push('(not chosen yet)');
-  L.push('','== FOUR-WEEK TRAINING BLOCK ==');
+  L.push('','== SIX-WEEK TRAINING CYCLE ==');
   var keyName={}; allPicked().forEach(function(p){ keyName[p.key]=mById(p.mid).name+': '+p.name; });
-  S.weeks.forEach(function(w,i){
-    if(w.f||w.a.trim()||w.k.trim()) L.push('Week '+(i+1)+': '+(keyName[w.f]||'no focus chosen')+(w.a.trim()?' | '+w.a.trim():'')+(w.k.trim()?' | Key words: '+w.k.trim():''));
-  });
+  function sessLineTxt(lab,s){
+    if(!sessionFilled(s)) return;
+    var beh=s.b.slice(); if(s.bx.trim()) beh.push(s.bx.trim());
+    L.push(lab+': '+(keyName[s.f]||'no focus chosen')+(beh.length?' | Behaviors: '+beh.join('; '):'')+(s.a.trim()?' | '+s.a.trim():'')+(s.k.trim()?' | Key words: '+s.k.trim():''));
+  }
+  S.weeks.forEach(function(w,i){ sessLineTxt('Week '+(i+1)+', Session 1',w.s1); sessLineTxt('Week '+(i+1)+', Session 2',w.s2); });
   return L.join('\n');
 }
 function downloadDoc(){
@@ -926,6 +992,10 @@ function onClick(e){
     case 'lvl':
       var an2=t.getAttribute('data-a'), st2=S.actions[an2]||(S.actions[an2]={}), v=+t.getAttribute('data-v');
       st2.lvl=(st2.lvl===v?null:v); persist(); render(); return;
+    case 'beh':
+      var bk=t.getAttribute('data-key').split('.'), bsess=S.weeks[+bk[0]][bk[1]], bt=t.getAttribute('data-b'), bi=bsess.b.indexOf(bt);
+      if(bi>=0) bsess.b.splice(bi,1); else if(bsess.b.length<BEHAVIOR_CAP) bsess.b.push(bt);
+      persist(); render(); return;
     case 'chk': var ci=t.getAttribute('data-c'); S.checks[ci]=!S.checks[ci]; persist(); return;
     case 'logOpen': draft={date:todayISO(),opp:'',r:{},note:''}; render(); return;
     case 'logCancel': draft=null; render(); return;
